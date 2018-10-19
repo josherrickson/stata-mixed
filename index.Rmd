@@ -1,5 +1,5 @@
 ---
-title: "Regression Modeling in Stata"
+title: "Mixed Effects Modeling in Stata"
 author: "Josh Errickson"
 date: "`r Sys.Date()`"
 site: bookdown::bookdown_site

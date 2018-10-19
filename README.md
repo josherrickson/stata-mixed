@@ -1,4 +1,4 @@
-# Intermediate Stata (Statistical Modeling) Notes (Bookdown)
+# Mixed Model in Stata Notes (Bookdown)
 
 Create Stata [dyndoc](http://www.stata.com/manuals/pdyndoc.pdf) files inside the stata-do folder, named `##-name.do`. Then use the Makefile to process them:
 

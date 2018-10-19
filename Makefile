@@ -38,5 +38,5 @@ open:
 	@open _book/index.html
 
 publish:
-	@mkdir ~/repositories/josherrickson.github.io/stata-regression
-	@cp -r _book/* ~/repositories/josherrickson.github.io/stata-regression/.
+	@mkdir ~/repositories/josherrickson.github.io/stata-mixed
+	@cp -r _book/* ~/repositories/josherrickson.github.io/stata-mixed/.
