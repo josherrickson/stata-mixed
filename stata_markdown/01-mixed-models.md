@@ -1,31 +1,39 @@
 ^#^ Mixed models
 
-Let's violate another regression assumption, [independence](#independence). While this is usually thought of in the repeated measurements setting, it
-is not exclusive to that. For example,
+When fitting a [regression model](https://errickson.net/stata-regression/index.html), the most important assumption the models make (whether it's
+linear regression or generalized linear regression) is that of independence - each row of your data set is indepdendent on all other rows.
 
-- Repeated measures: You're conducting a trial on individuals who undergo an intervention. You generate a survey, and have the participants fill out a
-  copy when the intervention begins, 30 days into the intervention, and 1 year after the intervention. If we have a single outcome measure of interest
-  from this survey, we have three measurements for person. These values are not independent; it's reasonable to think that your measurements are more
-  related to each other than any of mine.
-- Non-repeated measures: You conduct door-to-door sampling of individuals in households, asking about food habits. You collect information on each
-  individual in the house, and want to use individuals as the unit of analysis. It's likely that two individuals in the same house will have similar
-  food patterns, as opposed to two individuals from different houses.
+Now in general, this is almost never entirely true. If this violation is mild, it can be ignored. For example, if you give an exam to a class full of
+students, it's reasonable to assume some students study together and therefore their answers on some questions (right or wrong) will tend to be
+similar.
 
-To address the lack of dependence, we will move from normal regression (linear or otherwise) into a mixed models framework, which accounts for this
+Here we are more concerned with a structured violation of independence. The most straightforward situation in which this arises is repeated
+measures. Say you're administring an experiment where you are testing stress to different stimuli and are measuring quantities like blood pressure or
+heart rate. If I were to take the test multiple times, my measurements are correlated with each other - if I tend to have higher blood pressure, my
+blood pressure will be higher in each round regardless of stimuli.
+
+Another common repeated measures situation is follow-up over time. Say you track individuals who undergo some surgery, and follow-up with them every 2
+months, asking them to take a survey on their quality of life. While there are many research questions which could be asked about such data, one might
+be to examine the patient's quality of life depending on the various health markers they are experiencing. The surgery is targetting symptom A, is
+improvement in symptom A associated with better QoL? Is it sympton B which was unaffected by the surgery that has the largest effect on QoL? Obviously
+a given patient's QoL and health markers at one timepoint are highly correlated with each other.
+
+Another situation where this arises which isn't explicitly repeated measures is when your data is collected in some sort of clustered fashion. Note
+that if your data is collected via a complex survey design, this is an entirely different beast that needs to be addressed appropriately (with the
+`svyset` and `svy` set of commands). Instead I'm assuming a simpler set-up here. Say you are conducting a random door-to-door sampling of household
+food habits, asking all available household members. It's very likely that two individuals in the same household will have similar food
+habits. Therefore we gain less information by getting information on a new individual in an existing household, then adding a new individual from a
+new household.
+
+The canonical example of this is students in classrooms in schools in districts. All the situations above are 2-level (defined precisely [below]() FIX
+ME), but here we have four levels. Again, adding a new student from an existing class/school/district will likely not add as much information as a new
+student from a new class in a new school in a new district.
+
+To address the lack of independence, we will move from normal regression (linear or otherwise) into a mixed models framework, which models for this
 dependence structure. It does this (at the most basic level) by allowing each [individual from the intervention example, household from the
 door-to-door example] to have its own intercept which we *do not estimate*.
 
-For this chapter, we'll turn away from the "auto" data set and instead use a sample of
-the ["National Longitudinal Survey"](https://en.wikipedia.org/wiki/National_Longitudinal_Surveys) contained in Stata:
-
-~~~~
-<<dd_do>>
-webuse nlswork, clear
-<</dd_do>>
-~~~~
-
-This data is a survey taken from 1968-1988, and this specific sample of the data is salary information for women. We have repeated measures in the
-sense that we have yearly data for women, so each woman can have up to 20 data points.
+We'll be using
 
 ^#^^#^ Terminology
 
