@@ -33,8 +33,6 @@ To address the lack of independence, we will move from normal regression (linear
 dependence structure. It does this (at the most basic level) by allowing each [individual from the intervention example, household from the
 door-to-door example] to have its own intercept which we *do not estimate*.
 
-We'll be using
-
 ^#^^#^ Terminology
 
 There are several different names for mixed models which you might encounter, that all fit essentially the same model:
@@ -70,25 +68,53 @@ statisticians called "mixed models", what we're talking about here. The Stata co
 
 ^#^^#^ Wide vs Long data, Time-varying vs Time-invariant
 
-Before you begin your analysis, you need to ensure that the data is in the proper format. Let's consider the NLS data, where we have measures of
-women's salary over 20 years.
+Before you begin your analysis, you need to ensure that the data is in the proper format. The data can be either in wide-form or
+long-form. Long-format is sometimes called tall-form.
 
-Wide format of the data would have row represent a woman, and she would have 20 columns worth of salary information^[She may have salary information
-for only a subset of those years, but would have missing values in the other years.] (plus additional demographics).
+If the data is longitudinal (follows the same person over time, collecting data at intervals), the wide form would entail each row representing a
+single person, with the variables representing the questions at each wave. For example, if you were asking about income every 2 years, you'd have
+variables `income14`, `income16`, `income18` representing the individuals income in 2014, 2016 and 2018.
 
-Long format of the data would have each row represent a woman and a year, so that each woman can have up to 20 rows (if a woman wasn't measured in a
-given year, that row & year is missing).
+The tall form would have each row of data represent a person and a year. So you'd have a column for ID, a column for year, and then, continuing th
+example above, a single variable `income`.
 
-To fit a mixed model, we need the data in long format. We can use the `reshape` command to transform wide data to long. This is covered in the [Stata
-I](https://errickson.net/stata1/data-manipulation.html#reshaping-files) set of notes.
+If the data is clustered in some sense, e.g. students in classroom, the wide form would have each row be a single classroom, and have a separate set
+of variables for the first student, second student, etc. In this format, unbalanced data (classrooms having different number of students) would result
+in a lot of missing values.
+
+The tall form would have a single row per student, and a variable representing their class.
+
+In a lot of situations, it is easier to collect and manage data in wide form. However, to fit a mixed model, we need the data in long format. We can
+use the `reshape` command to transform wide data to long. This is covered in my [Introduction to
+Stata](https://errickson.net/stata1/data-manipulation.html#reshaping-files) set of notes.
 
 Additionally, there is the concept of time-varying vs time-invariant variables. Time-varying variables are those which can be different for each entry
-within the same individual. Examples include weight or salary. Time-invariant are those which are the same across all entries. Examples include race
-or baseline characteristics.
+within the same individual. Examples include weight or salary. Time-invariant are those which are the same across all entries. An example would be
+race. When data is long, time-invariant variables need to be constant per person. (When the repeated structure is not over time, this terminology can
+be confusing, but the idea remains.)
 
-When data is long, time-invariant variables need to be constant per person.
+^#^^#^ Mixed Model Theory
+
+The equation for ordinal least squares (linear regression) is
+
+^$$^
+  Y = \beta_0 + \beta_1X_1 + \beta_2X_2 + \cdots + \beta_pX_p + \epsilon
+^$$^
+
+where ^$^Y^$^ represents the outcome, the various ^$^X_k^$^ represent the predictor variables, the ^$^beta^$^ are the coefficients to be estimated,
+and ^$^\epsilon^$^ is the error.
+
 
 ^#^^#^ Linear Mixed Model
+
+https://www.icpsr.umich.edu/icpsrweb/ICPSR/studies/37105/summary
+
+~~~~
+<<dd_do>>
+use "/Users/josh/Downloads/ICPSR_37105/DS0001/37105-0001-Data.dta"
+do 37105-0001-Supplemental_syntax
+<</dd_do>>
+~~~~
 
 The most basic mixed model is the linear mixed model, which extends the [linear regression](#linear-regression) model. A model is called "mixed"
 because it contains a mixture of *fixed effects* and *random effects*.
@@ -190,6 +216,12 @@ Generally, failure to converge will be due to an issue with the data. Things to 
 - You can try use the "reml" optimizer, by passing the `reml` option. This optimizer can be a bit easier to converge.
 
 ^#^^#^ Logistic Mixed Model
+
+https://data.wprdc.org/dataset/allegheny-county-crash-data
+
+```
+import delim https://data.wprdc.org/datastore/dump/bf8b3c7e-8d60-40df-9134-21606a451c1a
+```
 
 Similar to [logistic regression](regression.html#logistic-regression) being an extension to [linear regression](regression#linear-regression),
 logistic mixed models are an extension to [linear mixed models](#linear-mixed-model) when the outcome variable is binary.
