@@ -104,6 +104,74 @@ The equation for ordinal least squares (linear regression) is
 where ^$^Y^$^ represents the outcome, the various ^$^X_k^$^ represent the predictor variables, the ^$^beta^$^ are the coefficients to be estimated,
 and ^$^\epsilon^$^ is the error.
 
+As mentioned [above](#terminology), there are two ways to think about mixed models - as a mixed model, or as a hierarchical model. Let's talk about
+the mixed model first.
+
+When we fit a mixed model, instead of a single set of ^$^X^$^'s and ^$^\beta^$^'s on the right-hand side, there are now two sets, one corresponding to
+the fixed effects and one corresponding to the random effects (a mixture of the two, hence the name). For example, the most basic form of a mixed
+model, which has some number of fixed effects and a single random intercept, we have:
+
+^$$^
+  Y_{ij} = \beta_0 + \beta_1X_{1i} + \beta_2X_{2i} + \cdots + \beta_pX_{pi} + \kappa_j + \epsilon_{ij}
+^$$^
+
+The subscript notation helps us keep track of things. Here, I've set it up such that each observation ^$^i^$^ belongs to a group ^$^j^$^. The response
+belonging to individual ^$^i^$^ in group ^$^j^$^ is predicted based upon some ^$^X^$^ variables, plus some additive effect which is unique to group
+^$^j^$^, and additional error.
+
+Let's use a concrete example to make this more precise. Let your data set consist of ^$^n^$^ students, labelled ^$^s = 1, 2, \cdots, n^$^, each belonging
+to one of ^$^m^$^ classrooms, labelled ^$^c = 1, 2, \cdots, m^$^. For further simplicity, let's assume there is only a single fixed predictor ^$^X^$^.
+
+^$$^
+  Y_{sc} = \beta_0 + \beta_1X_s + \kappa_c + \epsilon_{sc}
+^$$^
+
+It helps to think of ^$^\kappa^$^ as part of the error. You predict ^$^Y^$^ based upon the ^$^X^$^'s, then there is some common error amongst all
+students in classroom ^$^c^$^ which captured by ^$^\kappa_c^$^, then there is individual error captured by ^$^\epsilon_{sc}^$^.
+
+(You sometimes see the ^$^\kappa_j^$^ term written as ^$^\kappa Z^$^ where ^$^Z^$^ would be the variable indicating group membership. I find the above
+notation clearer, though they are mathematically equivalent.)
+
+In the above example, I've assumed that the sole ^$^X^$^ in the model is measured as the student level (hence ^$^X_s^$^). There is no need for that. I
+could instead fit the above model with one variable measured per student (say GPA) and one variable measured per classroom (say average teacher
+evaluation).
+
+^$$^
+  Y_{sc} = \beta_0 + \beta_1X_{1s} + \beta_2X_{2c} + \kappa_c + \epsilon_{sc}
+^$$^
+
+The nice part is that when fitting the model, this distinction doesn't matter! Both ^$^X_{1s}^$^ and ^$^X_{2c}^$^ are treated the same way.
+
+The error terms can be expanded if desired. For students (^$^s^$^) nested inside classrooms (^$^c^$^) nested inside districts (^$^d^$^):
+
+^$$^
+  Y_{scd} = \beta_0 + \beta_1X_{1s} + \beta_2X_{2c} + \gamma_d + \kappa_{cd} + \epsilon_{scd}
+^$$^
+
+Here ^$^\gamma^$^ is the error common to all students in a given district, ^$^kappa^$^ is the additional error common to all students in a given
+classroom, and ^$^\epsilon^$^ is any left over student error.
+
+^#^^#^^#^ The Hierarchical framework
+
+The hierarchical way to write these models is, in my opinion, unnecessarily complicated and does not improve on the understanding. It is more
+complicated for two reasons: 1) it is simply more complicated to write and understand, and 2) it requires conceptualizing the levels of the model more
+than needed. For completeness, I will briefly re-write the school and classroom above. In mixed form, the model would be:
+
+^$$^
+  Y_{sc} = \beta_0 + \beta_1X_{1s} + \kappa_c + \epsilon_{sc}
+^$$^
+
+In the hierarchical form, the model is:
+
+^$$^
+  Y_{sc} = \beta_{s0} + \beta_1X_{1s} + \epsilon_{sc}
+^$$^
+^$$^
+  \beta_{s0} = \gamma_{0} + \gamma_{1}Z_c + \sigma_c
+^$$^
+
+If you were to plug ^$^\beta_{s0}^$^ back into the first equation, you can see the equivalence of the two forms.
+
 
 ^#^^#^ Linear Mixed Model
 
