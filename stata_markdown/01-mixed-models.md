@@ -119,6 +119,11 @@ The subscript notation helps us keep track of things. Here, I've set it up such 
 belonging to individual ^$^i^$^ in group ^$^j^$^ is predicted based upon some ^$^X^$^ variables, plus some additive effect which is unique to group
 ^$^j^$^, and additional error.
 
+The catch is that *we do not estimate ^$^\kappa^$^*. If we include a categorical variable for the grouping variable, we could estimate all those
+intercepts, however, doing so would in most situations overfit the model (if each individual had two measurements, we'd be including ^$^n/2^$^
+predictors in a model with ^$^n^$^ observations). Instead, we estimate only the variance of ^$^\kappa_j^$^ which allows us to determine whether the
+intercepts differ between groups.
+
 Let's use a concrete example to make this more precise. Let your data set consist of ^$^n^$^ students, labelled ^$^s = 1, 2, \cdots, n^$^, each belonging
 to one of ^$^m^$^ classrooms, labelled ^$^c = 1, 2, \cdots, m^$^. For further simplicity, let's assume there is only a single fixed predictor ^$^X^$^.
 
@@ -148,7 +153,7 @@ The error terms can be expanded if desired. For students (^$^s^$^) nested inside
   Y_{scd} = \beta_0 + \beta_1X_{1s} + \beta_2X_{2c} + \gamma_d + \kappa_{cd} + \epsilon_{scd}
 ^$$^
 
-Here ^$^\gamma^$^ is the error common to all students in a given district, ^$^kappa^$^ is the additional error common to all students in a given
+Here ^$^\gamma^$^ is the error common to all students in a given district, ^$^\kappa^$^ is the additional error common to all students in a given
 classroom, and ^$^\epsilon^$^ is any left over student error.
 
 ^#^^#^^#^ The Hierarchical framework
@@ -314,33 +319,47 @@ mixed qol age agebelow52 ageabove82 i.socialclass female || household:
 <</dd_do>>
 ~~~~
 
-This is very slow - anything besides OLS will have an iterative solution, which takes time to converge.
-
 Let's walk through the output. Note that what we are calling the random effects (e.g. individuals in a repeated measures situation, classrooms in a
 students nested in classroom situation), Stata refers to as "groups" in much of the output.
 
-- At the very top, you'll see that the solution is arrived at iteratively, similar to [logistic regression](#fitting-the-logistic-model) (you probably
-  also noticed how slow it is)!
+- You probably noticed how slow it is - at the very top, you'll see that the solution is arrived at iteratively. Recall that any regression model
+  aside from OLS requires an iterative solution.
 - The log likelihood is how the iteration works; essentially the model "guesses" choices for the coefficients, and finds the set of coefficients that
   minimize the log likelihood. Of course, the "guess" is much smarter than random. The actual value of the log likelihood is meaningless.
 - Since we are dealing with repeated measures of some sort, instead of a single sample size, we record the total number of obs, the number of groups
-  (unique entries in the random effects) and min/mean/max of the groups. As before, just ensure these numbers seem right.
-- As with logistic regression, the ^$^\chi^2^$^ test tests the hypothesis that all coefficients are simultaneously 0.
+  (unique entries in the random effects) and min/mean/max of the groups. Just ensure there are no surprises in these numbers.
+- The ^$^\chi^2^$^ test tests the hypothesis that all coefficients are simultaneously 0.
     - We gave a significant p-value, so we continue with the interpretation.
 - The coefficients table is interpreted just as in linear regression, with the addendum that each coefficient is also controlling for the structure
   introduced by the random effects.
-    - Increased values of `ttl_exp` is associated with higher log incomes.
-    - The `race` baseline is "white"; compared to white, blacks have lower average income and others have higher average income.
-    - Higher age is associated with lower income.
-- The second table ("Random-effects parameters") gives us information about the error structure. The "idcode:" section is examining whether there is
-  variation across individuals above and beyond the differences in characteristics such as age and race. Since the estimate of `var(_cons)` (the
-  estimated variance of the constant per person - the individual level random effect) is non-zero (and not close to zero), that is evidence that the
-  random effect is beneficial. If the estimate was 0 or close to 0, that would be evidence that the random effect is unnecessary and that any
-  difference between individuals is already accounted for by the covariates.
+    - There is still nothing informative in age, however, compared to OLS, the two dummy variables have notably different coefficients.
+    - We'll have to check whether there is any difference in our conclusion regarding social class.
+    - The coefficient on gender is larger and much more significant.
+- The second table ("Random-effects parameters") gives us information about the error structure. The "household:" section is examining whether there
+  is variation across households above and beyond the differences in the controlled variables. Since the estimate of `var(_cons)` (the estimated
+  variance of the constant per person - the individual level random effect) is non-zero (and not close to zero), that is evidence that the random
+  effect is beneficial. If the estimate was 0 or close to 0, that would be evidence that the random effect is unnecessary and that any difference
+  between individuals is already accounted for by the covariates.
 - The estimated variance of the residuals is any additional variation between observations. This is akin to the residuals from linear regression.
 - The ^$^\chi^2^$^ test at the bottom is a formal test of the inclusion of the random effects versus a [linear
   regression](regression.html#linear-regression) model without the random effects. We reject the null that the models are equivalent, so it is
   appropriate to include the random effects.
+
+Let's quickly examine the social class categories. The calls to `margins` are identical, but they operate slightly differently with the random
+effects. Recall that the `margins` command works by assuming every row data is a given social class, then uses the observed values of the other fixed
+effets and the regression equation to predict the outcome, and averaging to obtain the marginal means. This is *not* the case with the random effects;
+the random effects (^$^\kappa_j^$^) are assumed to be 0. So for any given household, the marginal mean could be higher or lower, but on aggregate
+across all households, we are estimating the marginal means.
+
+~~~~
+<<dd_do>>
+margins socialclass
+margins socialclass, pwcompare(pv)
+<</dd_do>>
+~~~~
+
+Here our conclusions don't change - Unskilled & Semi-skilled have the same marginal means, and Professional and Managerial have the same marginal
+means, all other comparisons are significant.
 
 ^#^^#^ Assumptions
 
