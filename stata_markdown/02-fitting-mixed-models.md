@@ -371,12 +371,12 @@ Unfortunately fitting crossed random effects in Stata is a bit unwieldy. Here's 
 
 ~~~~
 <<dd_do>>
-mixed qol age agebelow52 ageabove82 i.socialclass female || _all:R.cluster || _all:R.household
+mixed qol age agebelow52 ageabove82 i.socialclass female || _all:R.household || _all:R.cluster
 <</dd_do>>
 ~~~~
 
-If you examine this model and the nested model you'll see the results are identical. But because it's so much cleaner to write the code for nested
-effects in Stata, most users will write as nested effects when they are able to.
+This exposes one difference we haven't addressed - just because functionally crossed and nested effects are the same, does not mean the algorithm
+which the software uses functions the same. Stata simply fails more often with crossed random effects. On the other hand, the `lmer` command in R has an easier time of specifying crossed effects and can converge this model just fine.
 
 ^#^^#^ Choosing Random or Fixed effects
 
