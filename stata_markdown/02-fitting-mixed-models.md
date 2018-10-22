@@ -394,87 +394,54 @@ There are plenty of grey-areas in between so this advice isn't always useful. In
 
 If the answer to these are No, include as random effects.
 
-^#^^#^ Random slopes
-
-So far all we've talked about are random intercepts. This is by far the most common form of mixed effects regression models. Recall that we set up the
-[theory](#mixed-model-theory.html#theory) by allowing each group to have its own intercept which we don't estimate. We can also allow each group to
-have it's own slope which we don't estimate.
-
 ^#^^#^ Miscellaneous
 
-As we've discussed before, [collinearity](regression.html#multicollinearity), [overfitting](regression.html#overfitting), and [model
-selection](regression.html#model-selection-is-bad) remain concerns.
+There are various concerns we had with non-mixed models; most still hold. See the previous set of notes (linked to each topic) for more details.
 
-Sample size considerations are tricky with mixed models. Typically these are done with simulations. At a rough pass, the rules of thumb from linear
-regression remain; 10-20 observations per predictor. Adding a new person will improve the power more than adding another observation for an existing
-group.
+[Multicollinearity](https://errickson.net/stata-regression/ordinary-least-squares.html#multicollinearity), the issue that predictor variables can be
+correlated amongst each other to provide false positive results, remains an issue in linear regression. The VIF cannot be estimated after a mixed
+model.
 
-The `margins` and `predict` command work similarly to `regress`, however note that both (by default) *ignore the random effects*; that is, the results
-the produce are averaged across all individuals.
+[Overfitting](https://errickson.net/stata-regression/ordinary-least-squares.html#overfitting) is still possible. Sample size considerations are
+tricky, but the general rule of 10-20 observations per predictor is a good starting point. There's the additional complexity of the group structure,
+but generally there are no restrictions on it. However, in practice, in you have a large number of groups with only a single measurement, [convergence
+issues](#convergence-issues) tend to arise.
 
-As with [linear regression](regression.html#robust-standard-errors) and [logistic regression](regression#logit-miscellaneous), `mixed` supports
-`vce(robust)` to enable robust standard errors.
+[Model selection](https://errickson.net/stata-regression/ordinary-least-squares.html#model-selection-is-bad) is still a very bad idea to do.
+
+[Robust standard errors](https://errickson.net/stata-regression/ordinary-least-squares.html#robust-standard-errors) are still obtainable using
+`vce(robust)` option.
 
 ^#^^#^ Convergence issues
 
-As with [logistic regression](regression.html#separation), the solution is arrived at iteratively, which means it can fail to converge for a number of
-reasons. Separation isn't an issue here (though it will be in [logistic mixed models](#convergence-issues)), but there can be other causes of a
-failure to converge.
+With mixed models, the solution is arrived at iteratively, which means it can fail to converge for a number of reasons. Generally, failure to converge
+will be due to an issue with the data.
 
-Generally, failure to converge will be due to an issue with the data. Things to look for include:
-
-- Different scales of predictors. For example, salary (in dollars) and number of children. The scales are drastically different which can cause
-  issues. Try re-scaling any variables on extreme scales (you can do this with `egen scaledvar = std(origvar)`). This will affect interpretation (the
-  estimated coefficient will be the average predicted change with a one standard deviation increase in the predictor) but not the overall model fit.
-- High correlation can cause this. Check correlations (`pwcorr` or `corr`) between your predictors (including any categorical variables) and if you
-  find a highly correlated pair, try removing one.
-- If the iteration keeps running (as opposed to ending and complaining about lack of convergence), try passing the option `emiterate(#)` with a few
-  "large" ("large" is relative to sample size) numbers to tell the algorithm to stop after # iterations, regardless of convergence. You're looking for
-  two things:
-    - First, if there are any estimated standard errors that are extremely close to zero, that predictor may be causing the issue. Try removing it.
-    - Second, if you try a few different max iterations (say 50, 100 and 200), and the estimated coefficients and standard errors are relatively
-      constant, you could consider that model as "good enough". You wouldn't have much confidence in the point estimates of the coefficients, but you
-      could at least gain insight into the direction and approximate magnitude of the effect.
-- You can try use the "reml" optimizer, by passing the `reml` option. This optimizer can be a bit easier to converge.
-
-^#^^#^ Logistic Mixed Model
-
-https://data.wprdc.org/dataset/allegheny-county-crash-data
+The first thing to try is scaling all your parameters:
 
 ```
-import delim https://data.wprdc.org/datastore/dump/bf8b3c7e-8d60-40df-9134-21606a451c1a
+egen scaled_var = std(var)
 ```
 
-Similar to [logistic regression](regression.html#logistic-regression) being an extension to [linear regression](regression#linear-regression),
-logistic mixed models are an extension to [linear mixed models](#linear-mixed-model) when the outcome variable is binary.
+Dummy variables typically don't need to be scaled, but can be. If scaling all your variables allows convergence, try different combinations of scaled
+and unscaled to figure out what variables are causing the problem. It's typically (but not always) the variables which have the largest scale to begin
+with.
 
-The command for logistic mixed models is `melogit`. The rest of the command works very similarly to `mixed`, and interpretation is the best of
-logistic regression (for fixed effects) and linear mixed models (for random effects). Unfortunately, neither `lroc` nor `estat gof` is supported, so
-goodness of fit must be measured solely on the ^$^\chi^2^$^ test and perhaps a manual model fit comparison.
+Another potential convergence issue is extremely high correlation between predictors (including dummy variables). You should have already addressed
+this when considering multicollinearity,but if not, it can make convergence challenging.
 
-By default the log-odds are reported, give the `or` option to report the odds ratios.
+If the iteration keeps running (as opposed to ending and complaining about lack of convergence), try passing the option `emiterate(#)` with a few
+"large" ("large" is relative to sample size) numbers to tell the algorithm to stop after `#` iterations, regardless of convergence. (Recall that an
+interative solution produces an answer at each iteration, it's just not a consistent answer until you reach convergence.) You're looking for two
+things:
 
-^#^^#^^#^ `meqrlogit`
+- First, if there are any estimated standard errors that are extremely close to zero or exploding towards infinity, that predictor may be causing the
+  issue. Try removing it.
+- Second, if you try a few different max iterations (say 50, 100 and 200), and the estimated coefficients and standard errors are relatively constant,
+  you may be running into a case where the model is converging to just beyond the tolerance which Stata uses, but for all intents and purposes is
+  converged. Set `emiterate(#)` to a high number and use that result.
 
-There is a different solver that can be used based upon QR-decomposition. This is run with the command `meqrlogit`. It functions identically to
-`melogit`. If `melogit` has convergence issues, try using `meqrlogit` instead.
+You can try use the "reml" optimizer, by passing the `reml` option. This optimizer can be a bit easier to converge, though may be slower.
 
-^#^^#^ Exercise 6
-
-Load up the "chicken" data set from Stata's website:
-
-```
-webuse chicken, clear
-```
-
-The data contains order information from a number of restaurants and records whether the order resulted in a complaint. We'd like to see what
-attributes (if any) of the servers may increase the odds of a complaint. Since we have multiple orders per restaurant, it's reasonable to assume that
-certain restaurants just recieve more complaints than others, regardless of the server, so we'll need to include random effects for those.
-
-Fit a mixed effects logistic regression model predicting `complain`, based upon server characteristics (`grade`, `race`, `gender`, `tenure`, `age`,
-`income`) and a few restaurant characteristics (`genderm` for gender of manager and `nworkers` for number of workers). Include a random effect for
-`restaurant`.
-
-1. Does the model fit better than chance?
-2. Interpret the model. What predicts a higher odds of recieving a complaint?
-3. Does it appear that adding the random effect was needed?
+Finally, although it pains me to admit it, you should try running the model in different software such as R or SAS. Each software has slightly
+different algorithms it uses, and there are situations where one software will converge and another won't
