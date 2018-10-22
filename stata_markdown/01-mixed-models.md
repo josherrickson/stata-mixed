@@ -175,38 +175,146 @@ If you were to plug ^$^\beta_{s0}^$^ back into the first equation, you can see t
 
 ^#^^#^ Linear Mixed Model
 
-https://www.icpsr.umich.edu/icpsrweb/ICPSR/studies/37105/summary
+The data we'll be using The Irish Longitudinal Study on Ageing, specificically the 2012-2013 data. It is available via ICPSR,
+https://www.icpsr.umich.edu/icpsrweb/ICPSR/studies/37105/datadocumentation (you may need to sign in to access the data). The data represents surveys
+of the elderly (50+) in Ireland.
+
+(The reason we're using such an esoteric data set is that a lot of good publically available longitudinal data comes in seperate files per wave. This
+is very common, and if you need to use these, you'll want to get familiar with the `append` and `merge` commands. This data requires no merging and is
+easier for demonstration purposes.)
+
+Once you've downloaded and extracted the files, and set your proper working directory, you can load the data and run the provided cleaning script
+which identifies missing values for Stata.
 
 ~~~~
 <<dd_do>>
-use "/Users/josh/Downloads/ICPSR_37105/DS0001/37105-0001-Data.dta"
-do 37105-0001-Supplemental_syntax
+use ICPSR_37105/DS0001/37105-0001-Data
+quietly do ICPSR_37105/DS0001/37105-0001-Supplemental_syntax
+rename _all, lower
 <</dd_do>>
 ~~~~
 
-The most basic mixed model is the linear mixed model, which extends the [linear regression](#linear-regression) model. A model is called "mixed"
-because it contains a mixture of *fixed effects* and *random effects*.
-
-- Fixed effects: These are the predictors that are present in regular linear regression. We will obtain coefficients for these predictors and be able
-  to test and interpret them. Technically, an OLS linear model is a mixed model with only fixed effects.^[Though why called it mixed at that point?]
-- Random effects: These are the "grouping" variables, and must be categorical (Stata will force every variable used to produce random effects as if it
-  were prefaced by `i.`). These are essentially just predictors as well, however, we do not obtain coefficients to test or interpret. We do get a
-  measure of the variability across groups, and a test of whether the random effect is benefiting the model.
-
-Let's fit a model using the `mixed` command. It works similar to `regress` with a slight tweak. We'll try and predict log of wages^[Typically, salary
-information is very right-skewed, and a log transformation makes the data closer to normal.] using work experience, race and age. The variable
-`idcode` identifies individuals.
+Each row of this data is from a single individual, but multiple individuals from the same household may be included. The primary variable of interest
+we'll be focusing on is a Quality of Life scale, `mhcasp19_total`, which is a score build from several sub-surveys. Let's see if we can predict it
+based upon age, social class, and gender. First let's explore each variable.
 
 ~~~~
 <<dd_do>>
-mixed ln_w ttl_exp i.race age || idcode:
+rename mhcasp19_total qol
+histogram qol
 <</dd_do>>
 ~~~~
 
-The fixed part of the equation, `ln_w ttl_exp i.race age` is the same as with linear regression, `ln_w` is the outcome and the rest are predictors,
-with `race` being categorical. The new part is `|| idcode:`. The `||` separates the fixed on the left from the random effects on the right. `idcode`
-identifies individuals. The `:` is to enable the more complicated feature of random slopes which we won't cover here; for our purposes the `:` is just
-required.
+<<dd_graph: replace>>
+
+Looks fine.
+
+~~~~
+<<dd_do>>
+histogram age
+<</dd_do>>
+~~~~
+
+<<dd_graph: replace>>
+
+There's actually a bit of censoring in the data, anyone below 52 or above 82. One way around this is to add dummy variables flagging those
+individuals, so let's do that.
+
+~~~~
+<<dd_do>>
+label list AGE
+generate agebelow52 = age == 51
+replace agebelow52 = . if missing(age)
+generate ageabove82 = age == 81
+replace ageabove82 = . if missing(age)
+<</dd_do>>
+~~~~
+
+Next social class and gender:
+
+~~~~
+<<dd_do>>
+rename w2socialclass socialclass
+tab socialclass
+tab gd002
+generate female = gd002 == 2
+replace female = . if missing(gd002)
+<</dd_do>>
+~~~~
+
+Both look fine.
+
+Finally, the `household` variable identifies individuals belonging to the same household.
+
+~~~~
+<<dd_do>>
+display _N
+quietly levelsof household
+display r(r)
+<</dd_do>>
+~~~~
+
+So we have <<dd_display: _N>> total individuals across <<dd_display: r(r)>> households.
+
+First, let's fit a linear regression model ignoring the dependence within households.
+
+~~~~
+<<dd_do>>
+regress qol age agebelow52 ageabove82 i.socialclass female
+<</dd_do>>
+~~~~
+
+This model doens't do so hot, but it's sufficient for our purposes - the F-test rejects.
+
+The interpretation of the age variables is that the coefficient on `age` represents the relationship between age and QoL which is for individuals
+between ages 52 and 81. The two coefficients on `agebelow52` and `ageabove82` is allowing those individuals to have a unique intercept, which means
+they don't affect the slope on age. If you really wanted to drill down into what this all means, you could do some fancy `margins` calls to predict
+the average response using `at()` to force the two dummies to the appropriate levels (not run):
+
+```
+margins, at(age = 51 agebelow52 = 1 ageabove82 = 0) at(age = (52 81) agebelow52 = 0 ageabove82 = 0) at(age=81 agebelow52 = 0 ageabove82 = 1)
+```
+
+In this case, there doesn't seem to be much effect of age (though it is good we controlled for it!).
+
+We see a marginal effect for female, and we see some differences amongst socialclasses. Let's explore them more with `margins`:
+
+~~~~
+<<dd_do>>
+margins socialclass
+margins socialclass, pwcompare(pv)
+<</dd_do>>
+~~~~
+
+So Professional and Managerial are indistinguishable, and Semi-skilled and Unskilled are likewise indistinguishable.
+
+To fit the mixed model, the command is `mixed`. Let's first fit it again ignoring the household random effects.
+
+~~~~
+<<dd_do>>
+mixed qol age agebelow52 ageabove82 i.socialclass female
+<</dd_do>>
+~~~~
+
+We get identical results. If you look at the [equations](#mixed-model-theory) again, when there are no random effects, the model simplifies to ordinal
+least squares.
+
+To add our random effect, we'll use the following generic notation:
+
+```
+mixed y <fixed effects> || <group variable>:
+```
+
+The `||` splits a formula into two sides, the left of it is the fixed effects, the right is the random effects. The `:` is for including [random
+slopes]() FIX ME which we'll discuss below.
+
+~~~~
+<<dd_do>>
+mixed qol age agebelow52 ageabove82 i.socialclass female || household:
+<</dd_do>>
+~~~~
+
+This is very slow - anything besides OLS will have an iterative solution, which takes time to converge.
 
 Let's walk through the output. Note that what we are calling the random effects (e.g. individuals in a repeated measures situation, classrooms in a
 students nested in classroom situation), Stata refers to as "groups" in much of the output.
