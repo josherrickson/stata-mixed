@@ -363,8 +363,43 @@ means, all other comparisons are significant.
 
 ^#^^#^ Assumptions
 
-The [linear additivity](regression.html#relationship-is-linear-and-additive) remains necessary. `rvfplot` will not work following a `mixed` command,
-but you can [generate the residuals vs fitted plot manually](regression.html#obtaining-predicted-values-and-residuals).
+The [linear additivity](regression.html#relationship-is-linear-and-additive) remains necessary - we need to assume that the true relationship between
+the predictors and the outcome is linear (as opposed to something more complicated like exponential) and additive (as opposed to multiplicative,
+unless we are including interactions). With `regress`, we could use the `rvf` post-estimation command to generate a plot of residuals versus predicted
+values. The `rvfplot` command does not work after `mixed`, but we can generate it manually.
+
+~~~~
+<<dd_do>>
+predict xb, xb
+predict res, res
+twoway scatter res xb
+<</dd_do>>
+~~~~
+
+<<dd_graph: replace>>
+
+The odd grouping pattern shown is due to the two categorical variables (gender and social class in the model). Each "blob" represents one
+permutation. You can see this by overlaying many plots:
+
+~~~~
+<<dd_do>>
+twoway (scatter res xb if female == 1 & socialclass == 1) ///
+			 (scatter res xb if female == 0 & socialclass == 1) ///
+			 (scatter res xb if female == 1 & socialclass == 2) ///
+			 (scatter res xb if female == 0 & socialclass == 2) ///
+			 (scatter res xb if female == 1 & socialclass == 3) ///
+			 (scatter res xb if female == 0 & socialclass == 3) ///
+			 (scatter res xb if female == 1 & socialclass == 4) ///
+			 (scatter res xb if female == 0 & socialclass == 4) ///
+			 (scatter res xb if female == 1 & socialclass == 5) ///
+			 (scatter res xb if female == 0 & socialclass == 5) ///
+			 (scatter res xb if female == 1 & socialclass == 6) ///
+			 (scatter res xb if female == 0 & socialclass == 6), ///
+			 legend(off)
+<</dd_do>>
+~~~~
+
+<<dd_graph: replace>>
 
 The [homogeneity of residuals](regression.html#errors-are-homogeneous) assumption is violated by design in a mixed model. However, some forms of
 heterogeneity, such as increasing variance as fitted values increase, are not supported. Therefore we can still use the residuals vs fitted plot to
