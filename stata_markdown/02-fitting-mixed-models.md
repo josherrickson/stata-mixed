@@ -1,10 +1,10 @@
 ^#^ Fitting Linear Mixed Models
 
-The data we'll be using The Irish Longitudinal Study on Ageing, specificically the 2012-2013 data. It is available via ICPSR,
+The data we'll be using The Irish Longitudinal Study on Ageing, specifically the 2012-2013 data. It is available via ICPSR,
 https://www.icpsr.umich.edu/icpsrweb/ICPSR/studies/37105/datadocumentation (you may need to sign in to access the data). The data represents surveys
 of the elderly (50+) in Ireland.
 
-(The reason we're using such an esoteric data set is that a lot of good publically available longitudinal data comes in seperate files per wave. This
+(The reason we're using such an esoteric data set is that a lot of good publicly available longitudinal data comes in separate files per wave. This
 is very common, and if you need to use these, you'll want to get familiar with the `append` and `merge` commands. This data requires no merging and is
 easier for demonstration purposes.)
 
@@ -91,7 +91,7 @@ regress qol age agebelow52 ageabove82 i.socialclass female
 <</dd_do>>
 ~~~~
 
-This model doens't do so hot, but it's sufficient for our purposes - the F-test rejects.
+This model doesn't do so hot, but it's sufficient for our purposes - the F-test rejects.
 
 The interpretation of the age variables is that the coefficient on `age` represents the relationship between age and QoL which is for individuals
 between ages 52 and 81. The two coefficients on `agebelow52` and `ageabove82` is allowing those individuals to have a unique intercept, which means
@@ -104,7 +104,7 @@ margins, at(age = 51 agebelow52 = 1 ageabove82 = 0) at(age = (52 81) agebelow52 
 
 In this case, there doesn't seem to be much effect of age (though it is good we controlled for it!).
 
-We see a marginal effect for female, and we see some differences amongst socialclasses. Let's explore them more with `margins`:
+We see a marginal effect for female, and we see some differences amongst social classes. Let's explore them more with `margins`:
 
 ~~~~
 <<dd_do>>
@@ -170,7 +170,7 @@ students nested in classroom situation), Stata refers to as "groups" in much of 
 
 Let's quickly examine the social class categories. The calls to `margins` are identical, but they operate slightly differently with the random
 effects. Recall that the `margins` command works by assuming every row data is a given social class, then uses the observed values of the other fixed
-effets and the regression equation to predict the outcome, and averaging to obtain the marginal means. This is *not* the case with the random effects;
+effects and the regression equation to predict the outcome, and averaging to obtain the marginal means. This is *not* the case with the random effects;
 the random effects (^$^\kappa_j^$^) are assumed to be 0. So for any given household, the marginal mean could be higher or lower, but on aggregate
 across all households, we are estimating the marginal means.
 
@@ -229,7 +229,7 @@ Overall though we see no pattern in the residuals.
 The other two assumptions which are relevant in linear regression, [homogeneity of
 residuals](https://errickson.net/stata-regression/ordinary-least-squares.html#errors-are-homogeneous) and
 [independence](https://errickson.net/stata-regression/ordinary-least-squares.html#independence), are both violated by design in a mixed
-model. However, you need to assume that no other violations occur - if there is additional variance heterogenity, such as that brought above by very
+model. However, you need to assume that no other violations occur - if there is additional variance heterogeneity, such as that brought above by very
 skewed response variables, you may need to make adjustments. Similarly, if there is some other form of dependence you are not yet modeling, you need
 to adjust your model to account for it.
 
@@ -291,9 +291,9 @@ twoway (rcap ub lb n if significant) (scatter rintercept n if significant), lege
 <<dd_graph: replace>>
 
 The range in the middle is all households which we predict to have intercepts not distinguishable from zero. We can see that most of the random
-intercept's confidenced intervals cross with the exception of very few large values and a larger chunk of small values.
+intercept's confidence intervals cross with the exception of very few large values and a larger chunk of small values.
 
-So households tended to have slightly higher random intercepts (even though most aren't distinguishable from 0), but there's a sizeable chunk whose
+So households tended to have slightly higher random intercepts (even though most aren't distinguishable from 0), but there's a size-able chunk whose
 random intercept is quite low:
 
 ~~~~
@@ -311,7 +311,8 @@ The model we've fit so far has a single random intercept, corresponding to house
 Nested random effects exist when we have a nested level structure. In this data, we actually have this as each household belongs to a single sampling
 cluster, identified by the `cluster` variable.
 
-We can re-fit the model including a random intercept for cluster, then within each cluster, a random intercept for household. We do so by adding another equation via `||`:
+We can re-fit the model including a random intercept for cluster, then within each cluster, a random intercept for household. We do so by adding
+another equation via `||`:
 
 ~~~~
 <<dd_do>>
@@ -350,7 +351,7 @@ following small data set.
 | b         | 1         |
 | b         | 2         |
 
-Here the first row of data reprsents the first student in classroom a, and the third row represents the first student in classroom b - both students
+Here the first row of data represents the first student in classroom a, and the third row represents the first student in classroom b - both students
 are **not the same student**. If we attempted to tell Stata that these random effects are crossed, Stata will incorrectly think rows 1 and 3 are the
 same student. By telling Stata that studentid is nested inside classroom, it knows that student 1 from classroom a is distinct from student 1 from
 classroom b.
@@ -376,7 +377,8 @@ mixed qol age agebelow52 ageabove82 i.socialclass female || _all:R.household || 
 ~~~~
 
 This exposes one difference we haven't addressed - just because functionally crossed and nested effects are the same, does not mean the algorithm
-which the software uses functions the same. Stata simply fails more often with crossed random effects. On the other hand, the `lmer` command in R has an easier time of specifying crossed effects and can converge this model just fine.
+which the software uses functions the same. Stata simply fails more often with crossed random effects. On the other hand, the `lmer` command in R has
+an easier time of specifying crossed effects and can converge this model just fine.
 
 ^#^^#^ Choosing Random or Fixed effects
 
@@ -432,7 +434,7 @@ this when considering multicollinearity, but if not, it can make convergence cha
 
 If the iteration keeps running (as opposed to ending and complaining about lack of convergence), try passing the option `emiterate(#)` with a few
 "large" ("large" is relative to sample size) numbers to tell the algorithm to stop after `#` iterations, regardless of convergence. (Recall that an
-interative solution produces an answer at each iteration, it's just not a consistent answer until you reach convergence.) You're looking for two
+iterative solution produces an answer at each iteration, it's just not a consistent answer until you reach convergence.) You're looking for two
 things:
 
 - First, if there are any estimated standard errors that are extremely close to zero or exploding towards infinity, that predictor may be causing the

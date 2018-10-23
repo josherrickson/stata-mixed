@@ -1,22 +1,22 @@
 ^#^ Mixed Model Theory
 
 When fitting a [regression model](https://errickson.net/stata-regression/index.html), the most important assumption the models make (whether it's
-linear regression or generalized linear regression) is that of independence - each row of your data set is indepdendent on all other rows.
+linear regression or generalized linear regression) is that of independence - each row of your data set is independent on all other rows.
 
 Now in general, this is almost never entirely true. If this violation is mild, it can be ignored. For example, if you give an exam to a class full of
 students, it's reasonable to assume some students study together and therefore their answers on some questions (right or wrong) will tend to be
 similar.
 
 Here we are more concerned with a structured violation of independence. The most straightforward situation in which this arises is repeated
-measures. Say you're administring an experiment where you are testing stress to different stimuli and are measuring quantities like blood pressure or
+measures. Say you're administering an experiment where you are testing stress to different stimuli and are measuring quantities like blood pressure or
 heart rate. If I were to take the test multiple times, my measurements are correlated with each other - if I tend to have higher blood pressure, my
 blood pressure will be higher in each round regardless of stimuli.
 
 Another common repeated measures situation is follow-up over time. Say you track individuals who undergo some surgery, and follow-up with them every 2
 months, asking them to take a survey on their quality of life. While there are many research questions which could be asked about such data, one might
-be to examine the patient's quality of life depending on the various health markers they are experiencing. The surgery is targetting symptom A, is
-improvement in symptom A associated with better QoL? Is it sympton B which was unaffected by the surgery that has the largest effect on QoL? Obviously
-a given patient's QoL and health markers at one timepoint are highly correlated with each other.
+be to examine the patient's quality of life depending on the various health markers they are experiencing. The surgery is targeting symptom A, is
+improvement in symptom A associated with better QoL? Is it symptom B which was unaffected by the surgery that has the largest effect on QoL? Obviously
+a given patient's QoL and health markers at one time-point are highly correlated with each other.
 
 Another situation where this arises which isn't explicitly repeated measures is when your data is collected in some sort of clustered fashion. Note
 that if your data is collected via a complex survey design, this is an entirely different beast that needs to be addressed appropriately (with the
@@ -75,7 +75,7 @@ If the data is longitudinal (follows the same person over time, collecting data 
 single person, with the variables representing the questions at each wave. For example, if you were asking about income every 2 years, you'd have
 variables `income14`, `income16`, `income18` representing the individuals income in 2014, 2016 and 2018.
 
-The tall form would have each row of data represent a person and a year. So you'd have a column for ID, a column for year, and then, continuing th
+The tall form would have each row of data represent a person and a year. So you'd have a column for ID, a column for year, and then, continuing the
 example above, a single variable `income`.
 
 If the data is clustered in some sense, e.g. students in classroom, the wide form would have each row be a single classroom, and have a separate set
@@ -126,8 +126,8 @@ intercepts, however, doing so would in most situations overfit the model (if eac
 predictors in a model with ^$^n^$^ observations). Instead, we estimate only the variance of ^$^\kappa_j^$^ which allows us to determine whether the
 intercepts differ between groups.
 
-Let's use a concrete example to make this more precise. Let your data set consist of ^$^n^$^ students, labelled ^$^s = 1, 2, \cdots, n^$^, each belonging
-to one of ^$^m^$^ classrooms, labelled ^$^c = 1, 2, \cdots, m^$^. For further simplicity, let's assume there is only a single fixed predictor ^$^X^$^.
+Let's use a concrete example to make this more precise. Let your data set consist of ^$^n^$^ students, labeled ^$^s = 1, 2, \cdots, n^$^, each belonging
+to one of ^$^m^$^ classrooms, labeled ^$^c = 1, 2, \cdots, m^$^. For further simplicity, let's assume there is only a single fixed predictor ^$^X^$^.
 
 ^$$^
   Y_{sc} = \beta_0 + \beta_1X_s + \kappa_c + \epsilon_{sc}

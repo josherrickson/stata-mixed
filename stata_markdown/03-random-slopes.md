@@ -29,7 +29,7 @@ Do you need a random slope? It depends on your theory. If your grouping variable
 cases), you probably don't need a random slope. If, on the other hand, you suspect there are substantial differences between groups and you're really
 interested in the average of those differences, then you should.
 
-For refernce, I'd say conservatively 95% of the mixed models I fit are in situations where a random slope is not needed, and 75% of the time when
+For reference, I'd say conservatively 95% of the mixed models I fit are in situations where a random slope is not needed, and 75% of the time when
 people ask me if they need a random slope, the answer is no.
 
 ^#^^#^ Fitting a random slope
@@ -74,5 +74,5 @@ In almost every model.
 This is very similar to excluding the intercept (^$^\beta_0^$^) in a model - this forces the slope to pass through (0,0). In some very rare situations
 that might be appropriate, but extremely rarely.
 
-Exlcuding the fixed slope when including random slopes forces the average of all random slopes to be 0. If the true random slope is far from zero,
+Excluding the fixed slope when including random slopes forces the average of all random slopes to be 0. If the true random slope is far from zero,
 this will have catastrophic effects, including reversing the signs on a good number of the random slopes.

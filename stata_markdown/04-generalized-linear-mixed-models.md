@@ -19,7 +19,7 @@ generally would run as a random intercept). The only concern is that separation 
 ^#^^#^ Poisson Mixed Model
 
 Poisson mixed models can be run with the `mepoisson` command. A `meqrpoisson` command exists and has benefits just like `meqrlogit`, but again, is an
-outdated command. If overdispersion is an issue, `menbreg` exists for negative binomial regression.
+outdated command. If over-dispersion is an issue, `menbreg` exists for negative binomial regression.
 
 ^#^^#^ Ordinal Logistic Regression
 
