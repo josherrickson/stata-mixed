@@ -428,7 +428,7 @@ and unscaled to figure out what variables are causing the problem. It's typicall
 with.
 
 Another potential convergence issue is extremely high correlation between predictors (including dummy variables). You should have already addressed
-this when considering multicollinearity,but if not, it can make convergence challenging.
+this when considering multicollinearity, but if not, it can make convergence challenging.
 
 If the iteration keeps running (as opposed to ending and complaining about lack of convergence), try passing the option `emiterate(#)` with a few
 "large" ("large" is relative to sample size) numbers to tell the algorithm to stop after `#` iterations, regardless of convergence. (Recall that an

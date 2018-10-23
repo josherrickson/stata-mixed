@@ -1,23 +1,30 @@
 ^#^ Generalized Linear Mixed Models
 
+Just as how [generalized linear models](https://errickson.net/stata-regression/generalized-linear-models.html) are an extension of linear regression,
+generalized linear mixed models are an extension of linear mixed models. In general, analysis and interpretation proceeds in a logical fashion from
+GLM's and mixed models.
+
+We'll briefly list some of the mixed models, and any quirks to be discussed about them. This section may be expanded in the future.
+
 ^#^^#^ Logistic Mixed Model
 
-https://data.wprdc.org/dataset/allegheny-county-crash-data
+There are actually two commands for logistic mixed models: `melogit` and `meqrlogit`. The former is faster, but the latter is more likely to
+converge. Both commands function generally identically. Note that `meqrlogit` is a somewhat outdated command, so it's possible that newer features to
+`melogit` may no longer work with `meqrlogit`.
 
-```
-import delim https://data.wprdc.org/datastore/dump/bf8b3c7e-8d60-40df-9134-21606a451c1a
-```
+[Separation](https://errickson.net/stata-regression/generalized-linear-models.html#separation) remains a major concern amongst fixed effects, but of
+lesser concern amongst random intercepts (e.g. a household where everyone had a positive response would break if included as a fixed effect, but
+generally would run as a random intercept). The only concern is that separation in random effects can make convergence harder to achieve.
 
-Similar to [logistic regression](regression.html#logistic-regression) being an extension to [linear regression](regression#linear-regression),
-logistic mixed models are an extension to [linear mixed models](#linear-mixed-model) when the outcome variable is binary.
+^#^^#^ Poisson Mixed Model
 
-The command for logistic mixed models is `melogit`. The rest of the command works very similarly to `mixed`, and interpretation is the best of
-logistic regression (for fixed effects) and linear mixed models (for random effects). Unfortunately, neither `lroc` nor `estat gof` is supported, so
-goodness of fit must be measured solely on the ^$^\chi^2^$^ test and perhaps a manual model fit comparison.
+Poisson mixed models can be run with the `mepoisson` command. A `meqrpoisson` command exists and has benefits just like `meqrlogit`, but again, is an
+outdated command. If overdispersion is an issue, `menbreg` exists for negative binomial regression.
 
-By default the log-odds are reported, give the `or` option to report the odds ratios.
+^#^^#^ Ordinal Logistic Regression
 
-^#^^#^^#^ `meqrlogit`
+These models can be run with `meologit`.
 
-There is a different solver that can be used based upon QR-decomposition. This is run with the command `meqrlogit`. It functions identically to
-`melogit`. If `melogit` has convergence issues, try using `meqrlogit` instead.
+^#^^#^ Multinomial Logistic Regression
+
+To my knowledge, Stata does not implement this model. It can be fit in several packages in R if you need it.

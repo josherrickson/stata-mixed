@@ -119,6 +119,8 @@ The subscript notation helps us keep track of things. Here, I've set it up such 
 belonging to individual ^$^i^$^ in group ^$^j^$^ is predicted based upon some ^$^X^$^ variables, plus some additive effect which is unique to group
 ^$^j^$^, and additional error.
 
+Both error terms, ^$^\epsilon^$^ and ^$^\kappa^$^ are assumed to have a mean of 0.
+
 The catch is that *we do not estimate ^$^\kappa^$^*. If we include a categorical variable for the grouping variable, we could estimate all those
 intercepts, however, doing so would in most situations overfit the model (if each individual had two measurements, we'd be including ^$^n/2^$^
 predictors in a model with ^$^n^$^ observations). Instead, we estimate only the variance of ^$^\kappa_j^$^ which allows us to determine whether the
