@@ -1,11 +1,11 @@
 ^#^ Fitting Linear Mixed Models
 
-The data we'll be using The Irish Longitudinal Study on Ageing, specifically the 2012-2013 data. It is available via ICPSR,
+The data we'll be using is The Irish Longitudinal Study on Ageing, specifically the 2012-2013 data. It is available via ICPSR,
 https://www.icpsr.umich.edu/icpsrweb/ICPSR/studies/37105/datadocumentation (you may need to sign in to access the data). The data represents surveys
 of the elderly (50+) in Ireland.
 
-(The reason we're using such an esoteric data set is that a lot of good publicly available longitudinal data comes in separate files per wave. This
-is very common, and if you need to use these, you'll want to get familiar with the `append` and `merge` commands. This data requires no merging and is
+(The reason we're using such an esoteric data set is that a lot of good publicly available longitudinal data comes in separate files per wave. This is
+very common, and if you need to use these, you'll want to get familiar with the `append` and `merge` commands. This dataset requires no merging and is
 easier for demonstration purposes.)
 
 Once you've downloaded and extracted the files, and set your proper working directory, you can load the data and run the provided cleaning script
@@ -20,7 +20,7 @@ rename _all, lower
 ~~~~
 
 Each row of this data is from a single individual, but multiple individuals from the same household may be included. The primary variable of interest
-we'll be focusing on is a Quality of Life scale, `mhcasp19_total`, which is a score build from several sub-surveys. Let's see if we can predict it
+we'll be focusing on is a Quality of Life scale, `mhcasp19_total`, which is a score built from several sub-surveys. Let's see if we can predict it
 based upon age, social class, and gender. First let's explore each variable.
 
 ~~~~
@@ -79,7 +79,7 @@ display r(r)
 <</dd_do>>
 ~~~~
 
-So we have <<dd_display: _N>> total individuals across <<dd_display: r(r)>> households.
+So we have <<dd_display: %9.0fc _N>> total individuals across <<dd_display: %9.0fc r(r)>> households.
 
 ^#^^#^ Fitting the model
 
@@ -93,13 +93,14 @@ regress qol age agebelow52 ageabove82 i.socialclass female
 
 This model doesn't do so hot, but it's sufficient for our purposes - the F-test rejects.
 
-The interpretation of the age variables is that the coefficient on `age` represents the relationship between age and QoL which is for individuals
-between ages 52 and 81. The two coefficients on `agebelow52` and `ageabove82` is allowing those individuals to have a unique intercept, which means
-they don't affect the slope on age. If you really wanted to drill down into what this all means, you could do some fancy `margins` calls to predict
-the average response using `at()` to force the two dummies to the appropriate levels (not run):
+The interpretation of the age variables is that the coefficient on `age` represents the relationship between age and QoL for individuals between ages
+52 and 81. The two coefficients on `agebelow52` and `ageabove82` are allowing those individuals which censored ages to have a unique intercept, which
+means they don't affect the slope on age. If you really wanted to drill down into what this all means, you could do some fancy `margins` calls to
+predict the average response using `at()` to force the two dummies to the appropriate levels (not run):
 
 ```
 margins, at(age = 51 agebelow52 = 1 ageabove82 = 0) at(age = (52 81) agebelow52 = 0 ageabove82 = 0) at(age=81 agebelow52 = 0 ageabove82 = 1)
+marginsplot
 ```
 
 In this case, there doesn't seem to be much effect of age (though it is good we controlled for it!).
@@ -126,14 +127,14 @@ mixed qol age agebelow52 ageabove82 i.socialclass female
 We get identical results. If you look at the [equations](#mixed-model-theory) again, when there are no random effects, the model simplifies to ordinal
 least squares.
 
-To add our random effect, we'll use the following generic notation:
+To add our random effect, we'll use the following notation:
 
 ```
 mixed y <fixed effects> || <group variable>:
 ```
 
 The `||` splits a formula into two sides, the left of it is the fixed effects, the right is the random effects. The `:` is for including [random
-slopes]() FIX ME which we'll discuss below.
+slopes](random-slopes.html) which we'll discuss below.
 
 ~~~~
 <<dd_do>>
@@ -142,7 +143,7 @@ mixed qol age agebelow52 ageabove82 i.socialclass female || household:
 ~~~~
 
 Let's walk through the output. Note that what we are calling the random effects (e.g. individuals in a repeated measures situation, classrooms in a
-students nested in classroom situation), Stata refers to as "groups" in much of the output.
+students nested in classroom situation), Stata refers to as "groups" in the top of the output.
 
 - You probably noticed how slow it is - at the very top, you'll see that the solution is arrived at iteratively. Recall that any regression model
   aside from OLS requires an iterative solution.
@@ -152,7 +153,7 @@ students nested in classroom situation), Stata refers to as "groups" in much of 
   (unique entries in the random effects) and min/mean/max of the groups. Just ensure there are no surprises in these numbers. In this model, the
   quality of life has a good chunk of missingness, so we're losing about 2000 individuals.
 - The ^$^\chi^2^$^ test tests the hypothesis that all coefficients are simultaneously 0.
-    - We gave a significant p-value, so we continue with the interpretation.
+    - We have a significant p-value, so we continue with the interpretation.
 - The coefficients table is interpreted just as in linear regression, with the addendum that each coefficient is also controlling for the structure
   introduced by the random effects.
     - There is still nothing informative in age, however, compared to OLS, the two dummy variables have notably different coefficients.
@@ -161,7 +162,7 @@ students nested in classroom situation), Stata refers to as "groups" in much of 
 - The second table ("Random-effects parameters") gives us information about the error structure. The "household:" section is examining whether there
   is variation across households above and beyond the differences in the controlled variables. Since the estimate of `var(_cons)` (the estimated
   variance of the constant per person - the individual level random effect) is non-zero (and not close to zero), that is evidence that the random
-  effect is beneficial. If the estimate was 0 or close to 0, that would be evidence that the random effect is unnecessary and that any difference
+  effect is necessary. If the estimate was 0 or close to 0, that would be evidence that the random effect is unnecessary and that any difference
   between individuals is already accounted for by the covariates.
 - The estimated variance of the residuals is any additional variation between observations. This is akin to the residuals from linear regression.
 - The ^$^\chi^2^$^ test at the bottom is a formal test of the inclusion of the random effects versus a [linear
@@ -170,9 +171,9 @@ students nested in classroom situation), Stata refers to as "groups" in much of 
 
 Let's quickly examine the social class categories. The calls to `margins` are identical, but they operate slightly differently with the random
 effects. Recall that the `margins` command works by assuming every row data is a given social class, then uses the observed values of the other fixed
-effects and the regression equation to predict the outcome, and averaging to obtain the marginal means. This is *not* the case with the random effects;
-the random effects (^$^\kappa_j^$^) are assumed to be 0. So for any given household, the marginal mean could be higher or lower, but on aggregate
-across all households, we are estimating the marginal means.
+effects and the regression equation to predict the outcome, and averaging to obtain the marginal means. This is *not* the case with the random
+effects; the random effects (^$^\kappa_j^$^) are assumed to be 0. So for any given household, the predicted response could be higher or lower, but on
+aggregate across all households, we are estimating the marginal means.
 
 ~~~~
 <<dd_do>>
@@ -235,10 +236,11 @@ to adjust your model to account for it.
 
 ^#^^#^ Predicting the random effects
 
-While keeping in mind that we do not *estimate* the random intercepts when fitting this model, we can *predict* them. What's the difference? It's
-subtle, but basically we have far less confidence in predicted values than in estimated values. So any confidence intervals will be substantially
-larger. We know from the model output above that there is variance among the household random intercepts but don't have a sense of the pattern - is
-there a single household that's much different than all the rest? Are they all rather noisy? Or something in between. We can test this.
+While keeping in mind that we do not *estimate* the random intercepts when fitting this model, we can *predict* their BLUPS - best linear unbiased
+predictors. What's the difference? It's subtle, but basically we have far less confidence in predicted values than in estimated values. So any
+confidence intervals will be substantially larger. We know from the model output above that there is variance among the household random intercepts
+but don't have a sense of the pattern - is there a single household that's much different than all the rest? Are they all rather noisy? Or something
+in between. We can test this.
 
 First, we'll predict the random intercepts and the standard error of those intercepts.
 
@@ -267,8 +269,9 @@ collapse (first) rintercept rintse (count) age, by(household)
 <</dd_do>>
 ~~~~
 
-Now we will sort by those random intercepts to add order, generate a variable indicating row number for plotting on the x-axis, and compute upper and
-lower bounds of confidence intervals. Finally we generate a dummy variable to identify which households have confidence intervals not crossing zero.
+Now we will sort by those random intercepts to make the output look nicer, generate a variable indicating row number for plotting on the x-axis, and
+compute upper and lower bounds of confidence intervals. Finally we generate a dummy variable to identify which households have confidence intervals
+not crossing zero.
 
 ~~~~
 <<dd_do>>
@@ -284,7 +287,9 @@ Now we can plot.
 
 ~~~~
 <<dd_do>>
-twoway (rcap ub lb n if significant) (scatter rintercept n if significant), legend(off) yline(0)
+twoway (rcap ub lb n if significant) ///
+       (scatter rintercept n if significant), ///
+         legend(off) yline(0)
 <</dd_do>>
 ~~~~
 
@@ -293,8 +298,8 @@ twoway (rcap ub lb n if significant) (scatter rintercept n if significant), lege
 The range in the middle is all households which we predict to have intercepts not distinguishable from zero. We can see that most of the random
 intercept's confidence intervals cross with the exception of very few large values and a larger chunk of small values.
 
-So households tended to have slightly higher random intercepts (even though most aren't distinguishable from 0), but there's a size-able chunk whose
-random intercept is quite low:
+So there's a negative skew to the distribution of random intercepts; most households had no additional error, but a decent chunk had significantly
+lower outcome than we would expect given their personel attributes. We can count exactly how many fall below:
 
 ~~~~
 <<dd_do>>
@@ -353,7 +358,7 @@ following small data set.
 
 Here the first row of data represents the first student in classroom a, and the third row represents the first student in classroom b - both students
 are **not the same student**. If we attempted to tell Stata that these random effects are crossed, Stata will incorrectly think rows 1 and 3 are the
-same student. By telling Stata that studentid is nested inside classroom, it knows that student 1 from classroom a is distinct from student 1 from
+same student. By telling Stata that `studentid` is nested inside `classroom`, it knows that student 1 from classroom a is distinct from student 1 from
 classroom b.
 
 However, if we were more clever with our data, we might instead store our data as:
@@ -372,7 +377,8 @@ Unfortunately fitting crossed random effects in Stata is a bit unwieldy. Here's 
 
 ~~~~
 <<dd_do>>
-mixed qol age agebelow52 ageabove82 i.socialclass female || _all:R.household || _all:R.cluster
+mixed qol age agebelow52 ageabove82 i.socialclass female || ///
+          _all:R.household || _all:R.cluster
 <</dd_do>>
 ~~~~
 
@@ -387,14 +393,17 @@ When these models were first being developed, the recommended guidelines were:
 - Fixed effects are used when the categories in the data represent all possible categories. For example, the collection of all schools in a given state.
 - Random effects are used when the categories in the data represent a sample of all possible categories. For example, a sample of students in a school.
 
-There are plenty of grey-areas in between so this advice isn't always useful. Instead think of it from a practical point of view
+There are plenty of grey-areas in between so this advice isn't always useful. Instead think of it from a practical point of view:
 
 1. Do you have a large enough sample size to include fixed effects (recall the rule of 10-20 observations per predictor. If each person in your data
    has no more than 2 observations, that's far too many fixed effects)?
-2. Do you need to actually estimate the average response within each group? (We can always [predict random effects](#predicting_the_random_ effects)
-   but that's not as powerful as estimating.)
+2. Do you need to actually estimate the inercept within each group, as opposed to just controlling for group differences? (We can always [predict
+   random effects](#predicting_the_random_ effects) but that's not as powerful as estimating.)
 
-If the answer to these are No, include as random effects.
+If the answer to both these are No, include as random effects.
+
+(If you don't need to estimate the group intercepts but the number of groups is low (say less than 5-10), it's more common to just include it as a
+fixed effect anyways. But that's just convention, not due to any strong argument which I'm aware of.)
 
 ^#^^#^ Miscellaneous
 
@@ -433,7 +442,7 @@ Another potential convergence issue is extremely high correlation between predic
 this when considering multicollinearity, but if not, it can make convergence challenging.
 
 If the iteration keeps running (as opposed to ending and complaining about lack of convergence), try passing the option `emiterate(#)` with a few
-"large" ("large" is relative to sample size) numbers to tell the algorithm to stop after `#` iterations, regardless of convergence. (Recall that an
+"large" ("large" is relative to running time) numbers to tell the algorithm to stop after `#` iterations, regardless of convergence. (Recall that an
 iterative solution produces an answer at each iteration, it's just not a consistent answer until you reach convergence.) You're looking for two
 things:
 

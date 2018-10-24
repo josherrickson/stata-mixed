@@ -20,18 +20,17 @@ a given patient's QoL and health markers at one time-point are highly correlated
 
 Another situation where this arises which isn't explicitly repeated measures is when your data is collected in some sort of clustered fashion. Note
 that if your data is collected via a complex survey design, this is an entirely different beast that needs to be addressed appropriately (with the
-`svyset` and `svy` set of commands). Instead I'm assuming a simpler set-up here. Say you are conducting a random door-to-door sampling of household
-food habits, asking all available household members. It's very likely that two individuals in the same household will have similar food
-habits. Therefore we gain less information by getting information on a new individual in an existing household, then adding a new individual from a
-new household.
+`svyset` and `svy` set of commands). Instead I'm assuming a simpler set-up here. Say you are conducting a survey that asks participants to come into a
+lab with their family. If the unit of analysis is a person (instead of a family), it's very likely that two individuals in the same household will
+have similar food habits. Therefore we gain less information by getting information on a new individual in an existing household, then adding a new
+individual from a new household.
 
-The canonical example of this is students in classrooms in schools in districts. All the situations above are 2-level (defined precisely [below]() FIX
-ME), but here we have four levels. Again, adding a new student from an existing class/school/district will likely not add as much information as a new
-student from a new class in a new school in a new district.
+The canonical example of this is students in classrooms in schools in districts. All the situations above are 2-level (defined precisely
+[below](#terminology), but here we have four levels. Again, adding a new student from an existing class/school/district will likely not add as much
+information as a new student from a new class in a new school in a new district.
 
 To address the lack of independence, we will move from normal regression (linear or otherwise) into a mixed models framework, which models for this
-dependence structure. It does this (at the most basic level) by allowing each [individual from the intervention example, household from the
-door-to-door example] to have its own intercept which we *do not estimate*.
+dependence structure. It does this (at the most basic level) by allowing each higher level unit to have it's own intercept which we *do not estimate*.
 
 ^#^^#^ Terminology
 
@@ -64,9 +63,11 @@ models with someone with econometric or economics training, it's important to di
 effects regression" and "random effects regression".
 
 Without going into the full details of the econometric world, what econometricians called "random effects regression" is essentially what
-statisticians called "mixed models", what we're talking about here. The Stata command `xtreg` handles those econometric models.
+statisticians called "mixed models", what we're talking about here. The Stata command `xtreg` handles those econometric models. I have a
+[document](http://errickson.net/stats-notes/xtsetvsmixed.html) which demostrates the equality of these, as well as explaing the ecoonometric "fixed
+effects regression" in terms of the statistical view of regression.
 
-^#^^#^ Wide vs Long data, Time-varying vs Time-invariant
+^#^^#^ Wide vs Long data
 
 Before you begin your analysis, you need to ensure that the data is in the proper format. The data can be either in wide-form or
 long-form. Long-format is sometimes called tall-form.
@@ -88,21 +89,32 @@ In a lot of situations, it is easier to collect and manage data in wide form. Ho
 use the `reshape` command to transform wide data to long. This is covered in my [Introduction to
 Stata](https://errickson.net/stata1/data-manipulation.html#reshaping-files) set of notes.
 
-Additionally, there is the concept of time-varying vs time-invariant variables. Time-varying variables are those which can be different for each entry
-within the same individual. Examples include weight or salary. Time-invariant are those which are the same across all entries. An example would be
-race. When data is long, time-invariant variables need to be constant per person. (When the repeated structure is not over time, this terminology can
-be confusing, but the idea remains.)
+^#^^#^ Level-1 versus Level-2 variables
+
+Often you will have variables that measure something about the unit of analysis, and other variables which measure something about the grouping
+variable. For example, you may have a variable indicating the GPA of a student, another variable indicating the size of their classroom, and yet
+another variable indicating the percent minority in their school.
+
+When thinking about this from the hierarchical view, it's important to differentiate between these types of variables. If you take my advice and think
+of this from the mixed model point of view, the difference is irrelevant - each is just a variable associated with the student.
+
+The only thing that matters is ensuring the data is correct - if you had 10 students in a class, and the variable `sizeofclass` was 10 for half them
+and 8 for the other half, Stata wouldn't know this is an issue and would fit the model without complaining - but now you've got a data issue that
+could be affecting your analysis.
+
+When the data is repeated measures over time, these are sometimes called time-variant (e.g. patient follow-ups, measured at each follow-up) or
+time-invariant (baseline characteristics or immutable demographics).
 
 ^#^^#^ Theory
 
 The equation for ordinal least squares (linear regression) is
 
 ^$$^
-  Y = \beta_0 + \beta_1X_1 + \beta_2X_2 + \cdots + \beta_pX_p + \epsilon
+  Y_i = \beta_0 + \beta_1X_{1i} + \beta_2X_{2i} + \cdots + \beta_pX_{pi} + \epsilon_i
 ^$$^
 
-where ^$^Y^$^ represents the outcome, the various ^$^X_k^$^ represent the predictor variables, the ^$^beta^$^ are the coefficients to be estimated,
-and ^$^\epsilon^$^ is the error.
+where ^$^Y_i^$^ represents the response of individual ^$^i^$^, the various ^$^X_{ki}^$^ represent the predictor variables for the same respondent, the
+^$^beta^$^ are the coefficients to be estimated (which are constant across individuals). ^$^\epsilon_i^$^ is the additional error for this individual.
 
 As mentioned [above](#terminology), there are two ways to think about mixed models - as a mixed model, or as a hierarchical model. Let's talk about
 the mixed model first.
@@ -117,14 +129,17 @@ model, which has some number of fixed effects and a single random intercept, we 
 
 The subscript notation helps us keep track of things. Here, I've set it up such that each observation ^$^i^$^ belongs to a group ^$^j^$^. The response
 belonging to individual ^$^i^$^ in group ^$^j^$^ is predicted based upon some ^$^X^$^ variables, plus some additive effect which is unique to group
-^$^j^$^, and additional error.
+^$^j^$^ (^$^\kappa_j^$^), and additional error unique to that individual (^$^\epsilon_{ij}).^[The choice of ^$^\epsilon^$^ for the individual error in
+a regression is fairly standardized in the literature. My choice of ^$^\kappa^$^ is not, as the literature have any standard choice for the random
+effect.]
 
-Both error terms, ^$^\epsilon^$^ and ^$^\kappa^$^ are assumed to have a mean of 0.
+Both error terms, ^$^\epsilon^$^ and ^$^\kappa^$^ are assumed to have a mean of 0. This is important here because it means that *on average the random
+intercept has no affect, but varies from individual to individual*.
 
-The catch is that *we do not estimate ^$^\kappa^$^*. If we include a categorical variable for the grouping variable, we could estimate all those
-intercepts, however, doing so would in most situations overfit the model (if each individual had two measurements, we'd be including ^$^n/2^$^
-predictors in a model with ^$^n^$^ observations). Instead, we estimate only the variance of ^$^\kappa_j^$^ which allows us to determine whether the
-intercepts differ between groups.
+The catch is that *we do not estimate ^$^\kappa_j^$^*. If we include a categorical variable for the grouping variable as a fixed effect, we could
+estimate all those intercepts, however, doing so would in most situations overfit the model (if each individual had two measurements, we'd be
+including ^$^n/2^$^ predictors in a model with ^$^n^$^ observations). Instead, we estimate only the variance of ^$^\kappa_j^$^ which allows us to
+determine whether the intercepts differ between groups.
 
 Let's use a concrete example to make this more precise. Let your data set consist of ^$^n^$^ students, labeled ^$^s = 1, 2, \cdots, n^$^, each belonging
 to one of ^$^m^$^ classrooms, labeled ^$^c = 1, 2, \cdots, m^$^. For further simplicity, let's assume there is only a single fixed predictor ^$^X^$^.
@@ -136,8 +151,8 @@ to one of ^$^m^$^ classrooms, labeled ^$^c = 1, 2, \cdots, m^$^. For further sim
 It helps to think of ^$^\kappa^$^ as part of the error. You predict ^$^Y^$^ based upon the ^$^X^$^'s, then there is some common error amongst all
 students in classroom ^$^c^$^ which captured by ^$^\kappa_c^$^, then there is individual error captured by ^$^\epsilon_{sc}^$^.
 
-(You sometimes see the ^$^\kappa_j^$^ term written as ^$^\kappa Z^$^ where ^$^Z^$^ would be the variable indicating group membership. I find the above
-notation clearer, though they are mathematically equivalent.)
+(You sometimes see the ^$^\kappa_j^$^ term written as ^$^\kappa_j Z_j^$^ where ^$^Z_j^$^ would be the variable indicating group membership. I find the
+above notation clearer, though they are mathematically equivalent.)
 
 In the above example, I've assumed that the sole ^$^X^$^ in the model is measured as the student level (hence ^$^X_s^$^). There is no need for that. I
 could instead fit the above model with one variable measured per student (say GPA) and one variable measured per classroom (say average teacher
@@ -155,8 +170,8 @@ The error terms can be expanded if desired. For students (^$^s^$^) nested inside
   Y_{scd} = \beta_0 + \beta_1X_{1s} + \beta_2X_{2c} + \gamma_d + \kappa_{cd} + \epsilon_{scd}
 ^$$^
 
-Here ^$^\gamma^$^ is the error common to all students in a given district, ^$^\kappa^$^ is the additional error common to all students in a given
-classroom, and ^$^\epsilon^$^ is any left over student error.
+Here ^$^\gamma_d^$^ is the error common to all students in a given district, ^$^\kappa_{cd}^$^ is the additional error common to all students in a given
+classroom, and ^$^\epsilon_{scd}^$^ is any left over student error.
 
 ^#^^#^^#^ The Hierarchical framework
 

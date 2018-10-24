@@ -5,15 +5,15 @@ So far all we've talked about are random intercepts. This is by far the most com
 have it's own slope which we don't estimate. Just as random intercepts are akin to including a fixed effect allowing each group to have it's own fixed
 effect, random slopes are akin to interacting a variable with the grouping variable, allowing each group to have it's own relationship.
 
-We would include a random slope in the model if we're interested, instead of the relationship between a predictor and the outcome when controlling for
-group membership, we were interested in the average relationship between the predictor and the outcome across groups. For example, if we had our basic
-class example,
+We would include a random slope in the model if, instead of the relationship between a predictor and the outcome when controlling for group
+membership, we were interested in the average relationship between the predictor and the outcome across groups. For example, if we had our basic class
+example,
 
 ```
 mixed gpa familyincome || class:
 ```
 
-In this model, the coefficient on `familyincome` would estimate the relationship between family income and GPA, removing any class-level
+In this model, the coefficient on `familyincome` would estimate the relationship between family income and GPA, removing any additional class-level
 differences. (Class-level differences here might be that a class that randomly has lower average income has a better teacher.)
 
 If we include a random slope, we add the variable after the `:` in the second equation.
@@ -30,7 +30,9 @@ cases), you probably don't need a random slope. If, on the other hand, you suspe
 interested in the average of those differences, then you should.
 
 For reference, I'd say conservatively 95% of the mixed models I fit are in situations where a random slope is not needed, and 75% of the time when
-people ask me if they need a random slope, the answer is no.
+people ask me if they need a random slope, the answer is no. However, my general bias is towards simpler models.^[If you're curious, may rational is
+I'd rather fit a simpler model that misses a nuanced complexity, then fit a more complicated model that has takes a substantial power hit and
+potentially is drastically further from the "truth".]
 
 ^#^^#^ Fitting a random slope
 
@@ -59,11 +61,13 @@ mixed qol age agebelow52 ageabove82 i.socialclass female || household: female
 
 Most of the output seems very familiar. The only addition is the "var(female)" in the Random-effects Parameters table which, just like in random
 intercepts, estimates the variance across all the random slopes. Here it is very non-zero, so improves model fit. However, none of the fixed effects
-really change. The only difference is in the interpretation of the coefficient on age. In the random intercepts model, the coefficient on age
-represented that females were on average that much higher than males, regardless of age, social class, or inter-household variance.
+really change. The only difference is in the interpretation of the coefficient on age:
 
-In this model with the random slope, the coefficient on age represents the average across all households of the amount that females are above males,
-regardless of age or social class.
+In the random intercepts model, the coefficient on age represented that females were on average that much higher than males, regardless of age, social
+class, or inter-household variance.
+
+In this model with the random slope as well, the coefficient on age represents the average across all households of the amount that females are above
+males, regardless of age or social class.
 
 ^#^^#^ Do you need to include the fixed slope if you have the random slopes
 
