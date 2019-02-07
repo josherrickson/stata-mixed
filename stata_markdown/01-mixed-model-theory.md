@@ -26,7 +26,7 @@ have similar food habits. Therefore we gain less information by getting informat
 individual from a new household.
 
 The canonical example of this is students in classrooms in schools in districts. All the situations above are 2-level (defined precisely
-[below](#terminology), but here we have four levels. Again, adding a new student from an existing class/school/district will likely not add as much
+[below](#terminology)), but here we have four levels. Again, adding a new student from an existing class/school/district will likely not add as much
 information as a new student from a new class in a new school in a new district.
 
 To address the lack of independence, we will move from normal regression (linear or otherwise) into a mixed models framework, which models for this
@@ -114,14 +114,13 @@ The equation for ordinal least squares (linear regression) is
 ^$$^
 
 where ^$^Y_i^$^ represents the response of individual ^$^i^$^, the various ^$^X_{ki}^$^ represent the predictor variables for the same respondent, the
-^$^beta^$^ are the coefficients to be estimated (which are constant across individuals). ^$^\epsilon_i^$^ is the additional error for this individual.
+^$^\beta_j^$^ are the coefficients to be estimated (which are constant across individuals). ^$^\epsilon_i^$^ is the additional error for this individual.
 
 As mentioned [above](#terminology), there are two ways to think about mixed models - as a mixed model, or as a hierarchical model. Let's talk about
 the mixed model first.
 
-When we fit a mixed model, instead of a single set of ^$^X^$^'s and ^$^\beta^$^'s on the right-hand side, there are now two sets, one corresponding to
-the fixed effects and one corresponding to the random effects (a mixture of the two, hence the name). For example, the most basic form of a mixed
-model, which has some number of fixed effects and a single random intercept, we have:
+The most basic form of a mixed model (which is also the most commonly used form) modifies the regression model above by separating the error term
+^$^\epsilon_i^$^ into a contribution to the error from each level of the data:
 
 ^$$^
   Y_{ij} = \beta_0 + \beta_1X_{1i} + \beta_2X_{2i} + \cdots + \beta_pX_{pi} + \kappa_j + \epsilon_{ij}
@@ -130,11 +129,13 @@ model, which has some number of fixed effects and a single random intercept, we 
 The subscript notation helps us keep track of things. Here, I've set it up such that each observation ^$^i^$^ belongs to a group ^$^j^$^. The response
 belonging to individual ^$^i^$^ in group ^$^j^$^ is predicted based upon some ^$^X^$^ variables, plus some additive effect which is unique to group
 ^$^j^$^ (^$^\kappa_j^$^), and additional error unique to that individual (^$^\epsilon_{ij}).^[The choice of ^$^\epsilon^$^ for the individual error in
-a regression is fairly standardized in the literature. My choice of ^$^\kappa^$^ is not, as the literature have any standard choice for the random
-effect.]
+a regression is fairly standardized in the literature. My choice of ^$^\kappa^$^ is not, as the literature does not have any standard choice for the
+random effect.]
 
-Both error terms, ^$^\epsilon^$^ and ^$^\kappa^$^ are assumed to have a mean of 0. This is important here because it means that *on average the random
+Both error terms, ^$^\epsilon^$^ and ^$^\kappa^$^, are assumed to have a mean of 0. This is important here because it means that *on average the random
 intercept has no affect, but varies from individual to individual*.
+
+The ^$^\beta^$^ terms are the fixed effects, and the ^$^\kappa^$^ error terms are the random effects.
 
 The catch is that *we do not estimate ^$^\kappa_j^$^*. If we include a categorical variable for the grouping variable as a fixed effect, we could
 estimate all those intercepts, however, doing so would in most situations overfit the model (if each individual had two measurements, we'd be
@@ -148,8 +149,8 @@ to one of ^$^m^$^ classrooms, labeled ^$^c = 1, 2, \cdots, m^$^. For further sim
   Y_{sc} = \beta_0 + \beta_1X_s + \kappa_c + \epsilon_{sc}
 ^$$^
 
-It helps to think of ^$^\kappa^$^ as part of the error. You predict ^$^Y^$^ based upon the ^$^X^$^'s, then there is some common error amongst all
-students in classroom ^$^c^$^ which captured by ^$^\kappa_c^$^, then there is individual error captured by ^$^\epsilon_{sc}^$^.
+You predict ^$^Y^$^ based upon the ^$^X^$^'s, then there is some common error amongst all students in classroom ^$^c^$^ which captured by
+^$^\kappa_c^$^, then there is individual error captured by ^$^\epsilon_{sc}^$^.
 
 (You sometimes see the ^$^\kappa_j^$^ term written as ^$^\kappa_j Z_j^$^ where ^$^Z_j^$^ would be the variable indicating group membership. I find the
 above notation clearer, though they are mathematically equivalent.)

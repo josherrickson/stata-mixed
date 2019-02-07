@@ -94,7 +94,7 @@ regress qol age agebelow52 ageabove82 i.socialclass female
 This model doesn't do so hot, but it's sufficient for our purposes - the F-test rejects.
 
 The interpretation of the age variables is that the coefficient on `age` represents the relationship between age and QoL for individuals between ages
-52 and 81. The two coefficients on `agebelow52` and `ageabove82` are allowing those individuals which censored ages to have a unique intercept, which
+52 and 81. The two coefficients on `agebelow52` and `ageabove82` are allowing those individuals with censored ages to have a unique intercept, which
 means they don't affect the slope on age. If you really wanted to drill down into what this all means, you could do some fancy `margins` calls to
 predict the average response using `at()` to force the two dummies to the appropriate levels (not run):
 
@@ -370,8 +370,8 @@ However, if we were more clever with our data, we might instead store our data a
 | b         | 3         |
 | b         | 4         |
 
-Now if I tell Stata these are crossed random effects, it won't get confused! So all nested random effects are are a way to make up for the fact that
-you may have been foolish in identifying individuals earlier.
+Now if I tell Stata these are crossed random effects, it won't get confused! So all nested random effects are just a way to make up for the fact that
+you may have been foolish in storing your data.
 
 Unfortunately fitting crossed random effects in Stata is a bit unwieldy. Here's the model we've been working with with crossed random effects.
 
@@ -397,7 +397,7 @@ There are plenty of grey-areas in between so this advice isn't always useful. In
 
 1. Do you have a large enough sample size to include fixed effects (recall the rule of 10-20 observations per predictor. If each person in your data
    has no more than 2 observations, that's far too many fixed effects)?
-2. Do you need to actually estimate the inercept within each group, as opposed to just controlling for group differences? (We can always [predict
+2. Do you need to actually estimate the intercept within each group, as opposed to just controlling for group differences? (We can always [predict
    random effects](#predicting_the_random_ effects) but that's not as powerful as estimating.)
 
 If the answer to both these are No, include as random effects.
