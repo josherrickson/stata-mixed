@@ -441,7 +441,7 @@ with.
 Another potential convergence issue is extremely high correlation between predictors (including dummy variables). You should have already addressed
 this when considering multicollinearity, but if not, it can make convergence challenging.
 
-If the iteration keeps running (as opposed to ending and complaining about lack of convergence), try passing the option `emiterate(#)` with a few
+If the iteration keeps running (as opposed to ending and complaining about lack of convergence), try passing the option `iterate(#)` with a few
 "large" ("large" is relative to running time) numbers to tell the algorithm to stop after `#` iterations, regardless of convergence. (Recall that an
 iterative solution produces an answer at each iteration, it's just not a consistent answer until you reach convergence.) You're looking for two
 things:
@@ -450,7 +450,7 @@ things:
   issue. Try removing it.
 - Second, if you try a few different max iterations (say 50, 100 and 200), and the estimated coefficients and standard errors are relatively constant,
   you may be running into a case where the model is converging to just beyond the tolerance which Stata uses, but for all intents and purposes is
-  converged. Set `emiterate(#)` to a high number and use that result.
+  converged. Set `iterate(#)` to a high number and use that result.
 
 You can try use the "reml" optimizer, by passing the `reml` option. This optimizer can be a bit easier to converge, though may be slower.
 
