@@ -1,0 +1,42 @@
+# Generalized Linear Mixed Models
+
+Just as how [generalized linear
+models](https://errickson.net/stata-regression/02-glm.html) are an extension of
+linear regression, generalized linear mixed models are an extension of linear
+mixed models. In general, analysis and interpretation proceeds in a logical
+fashion from GLM's and mixed models.
+
+We'll briefly list some of the mixed models, and any quirks to be discussed
+about them. This section may be expanded in the future.
+
+## Logistic Mixed Model
+
+There are actually two commands for logistic mixed models: `melogit` and
+`meqrlogit`. The former is faster, but the latter is more likely to converge.
+Both commands function generally identically. Note that `meqrlogit` is a
+somewhat outdated command, so it's possible that newer features to `melogit` may
+no longer work with `meqrlogit`.
+
+[Separation](https://errickson.net/stata-regression/02-glm.html#separation)
+remains a major concern amongst fixed effects, but of lesser concern amongst
+random intercepts (e.g. a household where everyone had a positive response would
+break if included as a fixed effect, but generally would run as a random
+intercept). The only concern is that separation in random effects can make
+convergence harder to achieve.
+
+## Poisson Mixed Model
+
+Poisson mixed models can be run with the `mepoisson` command. A `meqrpoisson`
+command exists and has benefits just like `meqrlogit`, but again, is an outdated
+command. If over-dispersion is an issue, `menbreg` exists for negative binomial
+regression.
+
+## Ordinal Logistic Regression
+
+These models can be run with `meologit`.
+
+## Multinomial Logistic Regression
+
+
+This can only be fit via
+[`sem`](https://www.stata.com/manuals/semexample41g.pdf).

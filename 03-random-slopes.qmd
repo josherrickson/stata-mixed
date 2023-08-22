@@ -1,0 +1,140 @@
+# Random slopes
+
+So far all we've talked about are random intercepts. This is by far the most
+common form of mixed effects regression models. Recall that we set up the
+[theory](01-mixed-model-theory.qmd) by allowing each group to have its
+own intercept which we don't estimate. We can also allow each group to have it's
+own slope which we don't estimate. Just as random intercepts are akin to
+including a fixed effect allowing each group to have it's own fixed effect,
+random slopes are akin to interacting a variable with the grouping variable,
+allowing each group to have it's own relationship.
+
+We would include a random slope in the model if, instead of the relationship
+between a predictor and the outcome when controlling for group membership, we
+were interested in the average relationship between the predictor and the
+outcome across groups. For example, if we had our basic class example,
+
+```stata
+mixed gpa familyincome || class:
+```
+
+In this model, the coefficient on `familyincome` would estimate the relationship
+between family income and GPA, removing any additional class-level differences.
+(Class-level differences here might be that a class that randomly has lower
+average income has a better teacher.)
+
+If we include a random slope, we add the variable after the `:` in the second
+equation.
+
+```stata
+mixed gpa familyincome || class: familyincome
+```
+
+Now the model would allow each classroom to have it's own relationship between
+family income and GPA (which, just like random intercepts, is not actually
+estimated) and the coefficient on `familyincome` would represent the average of
+those relationships.
+
+Do you need a random slope? It depends on your theory. If your grouping variable
+is a nuisance and you're simply controlling for it (as it is in most cases), you
+probably don't need a random slope. If, on the other hand, you suspect there are
+substantial differences between groups and you're really interested in the
+average of those differences, then you should.
+
+For reference, I'd say conservatively 95% of the mixed models I fit are in
+situations where a random slope is not needed, and 75% of the time when people
+ask me if they need a random slope, the answer is no. However, my general bias
+is towards simpler models.^[If you're curious, my rational is I'd rather fit a
+simpler model that misses a nuanced complexity, then fit a more complicated
+model that has takes a substantial power hit and potentially is drastically
+further from the "truth".]
+
+## Fitting a random slope
+
+Let's add a random slope for gender.
+
+
+```stata
+. mixed qol age agebelow52 ageabove82 i.socialclass female || household: female
+
+Performing EM optimization ...
+
+Performing gradient-based optimization: 
+Iteration 0:  Log likelihood = -18119.073  (not concave)
+Iteration 1:  Log likelihood = -17948.342  
+Iteration 2:  Log likelihood =  -17943.72  
+Iteration 3:  Log likelihood = -17943.715  
+Iteration 4:  Log likelihood = -17943.715  
+
+Computing standard errors ...
+
+Mixed-effects ML regression                          Number of obs    =  5,179
+Group variable: household                            Number of groups =  3,995
+                                                     Obs per group:
+                                                                  min =      1
+                                                                  avg =    1.3
+                                                                  max =      3
+                                                     Wald chi2(9)     = 129.85
+Log likelihood = -17943.715                          Prob > chi2      = 0.0000
+
+------------------------------------------------------------------------------
+         qol | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+         age |  -.0091432   .0139003    -0.66   0.511    -.0363872    .0181008
+  agebelow52 |  -.3693919   .5323218    -0.69   0.488    -1.412723    .6739396
+  ageabove82 |  -1.205023   .9809622    -1.23   0.219    -3.127673    .7176278
+             |
+ socialclass |
+Manageria..  |   .2311012   .5075454     0.46   0.649    -.7636694    1.225872
+ Non-Manual  |  -1.107475   .5090861    -2.18   0.030    -2.105265   -.1096846
+    Skilled  |  -1.807631   .5325279    -3.39   0.001    -2.851366    -.763895
+Semi-skil~d  |  -2.980058   .5455297    -5.46   0.000    -4.049276   -1.910839
+  Unskilled  |  -3.576474   .7302271    -4.90   0.000    -5.007693   -2.145255
+             |
+      female |   .5655497   .2081084     2.72   0.007     .1576647    .9734348
+       _cons |   44.72468   1.018609    43.91   0.000     42.72825    46.72112
+------------------------------------------------------------------------------
+
+------------------------------------------------------------------------------
+  Random-effects parameters  |   Estimate   Std. err.     [95% conf. interval]
+-----------------------------+------------------------------------------------
+household: Independent       |
+                 var(female) |   4.050416   2.356897      1.294774    12.67084
+                  var(_cons) |    22.7137   1.789205      19.46421    26.50567
+-----------------------------+------------------------------------------------
+               var(Residual) |   36.96956   1.960264      33.32041    41.01835
+------------------------------------------------------------------------------
+LR test vs. linear model: chi2(2) = 149.11                Prob > chi2 = 0.0000
+
+Note: LR test is conservative and provided only for reference.
+
+```
+
+Most of the output seems very familiar. The only addition is the "var(female)"
+in the Random-effects Parameters table which, just like in random intercepts,
+estimates the variance across all the random slopes. Here it is very non-zero,
+so improves model fit. However, none of the fixed effects really change. The
+only difference is in the interpretation of the coefficient on female:
+
+In the random intercepts model, the coefficient on female represented that
+females were on average that much higher than males, regardless of age, social
+class, or inter-household variance.
+
+In this model with the random slope as well, the coefficient on female
+represents the average across all households of the amount that females are
+above males, regardless of age or social class.
+
+## Do you need to include the fixed slope if you have the random slopes
+
+Yes.
+
+In almost every model.
+
+This is very similar to excluding the intercept ($\beta_0$) in a model - this
+forces the slope to pass through (0,0). In some very rare situations that might
+be appropriate, but extremely rarely.
+
+Excluding the fixed slope when including random slopes forces the average of all
+random slopes to be 0. If the true random slope is far from zero, this will have
+catastrophic effects, including reversing the signs on a good number of the
+random slopes.

@@ -1,0 +1,20 @@
+project:
+  type: book
+  pre-render: make stata
+  output-dir: docs
+
+book:
+  title: "Regression Modeling in Stata"
+  chapters:
+    - index.qmd
+    - 01-mixed-model-theory.qmd
+    - 02-fitting-mixed-models.qmd
+    - 03-random-slopes.qmd
+    - 04-generalized-linear-mixed-models.qmd
+
+format:
+  html:
+    theme:
+      light: cosmo
+      dark: [cosmo, theme-dark.scss]
+    callout-appearance: simple

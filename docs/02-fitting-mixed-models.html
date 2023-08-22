@@ -1,0 +1,1147 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.3.450">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Regression Modeling in Stata - 2&nbsp; Fitting Linear Mixed Models</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./03-random-slopes.html" rel="next">
+<link href="./01-mixed-model-theory.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark.css" rel="prefetch" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-dark.min.css" rel="prefetch" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+</head>
+
+<body class="nav-sidebar floating">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+      <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./02-fitting-mixed-models.html"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Fitting Linear Mixed Models</span></a></li></ol></nav>
+      <a class="flex-grow-1" role="button" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+      </a>
+      <button type="button" class="btn quarto-search-button" aria-label="" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">Regression Modeling in Stata</a> 
+        <div class="sidebar-tools-main">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Preface</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./01-mixed-model-theory.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Mixed Model Theory</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-fitting-mixed-models.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Fitting Linear Mixed Models</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./03-random-slopes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Random slopes</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./04-generalized-linear-mixed-models.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Generalized Linear Mixed Models</span></span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#fitting-the-model" id="toc-fitting-the-model" class="nav-link active" data-scroll-target="#fitting-the-model"><span class="header-section-number">2.1</span> Fitting the model</a></li>
+  <li><a href="#assumptions" id="toc-assumptions" class="nav-link" data-scroll-target="#assumptions"><span class="header-section-number">2.2</span> Assumptions</a></li>
+  <li><a href="#predicting-the-random-effects" id="toc-predicting-the-random-effects" class="nav-link" data-scroll-target="#predicting-the-random-effects"><span class="header-section-number">2.3</span> Predicting the random effects</a></li>
+  <li><a href="#nested-and-crossed-random-effects" id="toc-nested-and-crossed-random-effects" class="nav-link" data-scroll-target="#nested-and-crossed-random-effects"><span class="header-section-number">2.4</span> Nested and Crossed random effects</a>
+  <ul class="collapse">
+  <li><a href="#nested-random-effects" id="toc-nested-random-effects" class="nav-link" data-scroll-target="#nested-random-effects"><span class="header-section-number">2.4.1</span> Nested random effects</a></li>
+  <li><a href="#crossed-random-effects" id="toc-crossed-random-effects" class="nav-link" data-scroll-target="#crossed-random-effects"><span class="header-section-number">2.4.2</span> Crossed random effects</a></li>
+  </ul></li>
+  <li><a href="#choosing-random-or-fixed-effects" id="toc-choosing-random-or-fixed-effects" class="nav-link" data-scroll-target="#choosing-random-or-fixed-effects"><span class="header-section-number">2.5</span> Choosing Random or Fixed effects</a></li>
+  <li><a href="#miscellaneous" id="toc-miscellaneous" class="nav-link" data-scroll-target="#miscellaneous"><span class="header-section-number">2.6</span> Miscellaneous</a></li>
+  <li><a href="#convergence-issues" id="toc-convergence-issues" class="nav-link" data-scroll-target="#convergence-issues"><span class="header-section-number">2.7</span> Convergence issues</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Fitting Linear Mixed Models</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+</header>
+
+<p>The data we’ll be using is The Irish Longitudinal Study on Ageing, specifically the 2012-2013 data. It is available via ICPSR, <a href="https://www.icpsr.umich.edu/icpsrweb/ICPSR/studies/37105/datadocumentation" class="uri">https://www.icpsr.umich.edu/icpsrweb/ICPSR/studies/37105/datadocumentation</a> (you may need to sign in to access the data). The data represents surveys of the elderly (50+) in Ireland.</p>
+<p>(The reason we’re using such an esoteric data set is that a lot of good publicly available longitudinal data comes in separate files per wave. This is very common, and if you need to use these, you’ll want to get familiar with the <code>append</code> and <code>merge</code> commands. This dataset requires no merging and is easier for demonstration purposes.)</p>
+<p>Once you’ve downloaded and extracted the files, and set your proper working directory, you can load the data and run the provided cleaning script which identifies missing values for Stata.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>. <span class="kw">use</span> ICPSR_37105/DS0001/37105-0001-Data</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>(The Irish Longitudinal Study <span class="kw">on</span> Ageing (TILDA), 2012-2013)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>. <span class="kw">quietly</span> <span class="kw">do</span> ICPSR_37105/DS0001/37105-0001-Supplemental_syntax</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>. <span class="kw">rename</span> <span class="dt">_all</span>, <span class="fu">lower</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Each row of this data is from a single individual, but multiple individuals from the same household may be included. The primary variable of interest we’ll be focusing on is a Quality of Life scale, <code>mhcasp19_total</code>, which is a score built from several sub-surveys. Let’s see if we can predict it based upon age, social class, and gender. First let’s explore each variable.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>. <span class="kw">rename</span> mhcasp19_total qol</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>. <span class="kw">histogram</span> qol</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>(<span class="bn">bin</span>=37, <span class="bn">start</span>=4, <span class="kw">width</span>=1.4324324)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p><img src="graphs/02-1.png" class="img-fluid"></p>
+<p>Looks fine.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>. <span class="kw">histogram</span> age</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>(<span class="bn">bin</span>=38, <span class="bn">start</span>=51, <span class="kw">width</span>=.81578947)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p><img src="graphs/02-2.png" class="img-fluid"></p>
+<p>There’s actually a bit of censoring in the data, anyone below 52 or above 82. One way around this is to add dummy variables flagging those individuals, so let’s do that.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>. <span class="kw">label</span> <span class="ot">list</span> AGE</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>AGE:</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>          51 Less than 52</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>          82 82+</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>. <span class="kw">generate</span> agebelow52 = age == 51</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>. <span class="kw">replace</span> agebelow52 = . <span class="kw">if</span> <span class="fu">missing</span>(age)</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>(0 <span class="fu">real</span> changes made)</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>. <span class="kw">generate</span> ageabove82 = age == 81</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>. <span class="kw">replace</span> ageabove82 = . <span class="kw">if</span> <span class="fu">missing</span>(age)</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>(0 <span class="fu">real</span> changes made)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Next social class and gender:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>. <span class="kw">rename</span> w2socialclass socialclass</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>. <span class="kw">tab</span> socialclass</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>               w2socialclass |      Freq.     Percent        Cum.</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>-----------------------------+-----------------------------------</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>                Professional |        338        5.06        5.06</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>      Managerial &amp; Technical |      1,753       26.23       31.29</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>                  Non-Manual |      2,023       30.27       61.56</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>                     Skilled |      1,159       17.34       78.90</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>                Semi-skilled |      1,115       16.68       95.59</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>                   Unskilled |        295        4.41      100.00</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>-----------------------------+-----------------------------------</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>                       Total |      6,683      100.00</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>. <span class="kw">tab</span> gd002</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>    gd002 - |</span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>  Gender <span class="kw">of</span> |</span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a> respondent |      Freq.     Percent        Cum.</span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>------------+-----------------------------------</span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>       Male |      3,203       44.44       44.44</span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>     Female |      4,004       55.56      100.00</span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>------------+-----------------------------------</span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>      Total |      7,207      100.00</span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>. <span class="kw">generate</span> female = gd002 == 2</span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a>. <span class="kw">replace</span> female = . <span class="kw">if</span> <span class="fu">missing</span>(gd002)</span>
+<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a>(0 <span class="fu">real</span> changes made)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Both look fine.</p>
+<p>Finally, the <code>household</code> variable identifies individuals belonging to the same household.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>. <span class="kw">display</span> _N</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>7207</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>. <span class="kw">quietly</span> <span class="kw">levelsof</span> household</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>. <span class="kw">display</span> <span class="fu">r</span>(<span class="fu">r</span>)</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>5376</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>So we have 7,207 total individuals across 5,376 households.</p>
+<section id="fitting-the-model" class="level2" data-number="2.1">
+<h2 data-number="2.1" class="anchored" data-anchor-id="fitting-the-model"><span class="header-section-number">2.1</span> Fitting the model</h2>
+<p>First, let’s fit a linear regression model ignoring the dependence within households.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>. <span class="kw">regress</span> qol age agebelow52 ageabove82 i.socialclass female</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>      Source |       SS           df       MS      Number <span class="kw">of</span> <span class="kw">obs</span>   =     5,179</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>-------------+----------------------------------   <span class="fu">F</span>(9, 5169)      =     16.52</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>       Model |  9173.37321         9  1019.26369   Prob &gt; <span class="fu">F</span>        =    0.0000</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    Residual |  318919.729     5,169  61.6985354   R-squared       =    0.0280</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>-------------+----------------------------------   Adj R-squared   =    0.0263</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>       Total |  328093.103     5,178  63.3629012   Root MSE        =    7.8548</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>------------------------------------------------------------------------------</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>         qol | Coefficient  Std. err.      t    P&gt;|t|     [95% conf. interval]</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>-------------+----------------------------------------------------------------</span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>         age |   -.010319   .0135138    -0.76   0.445    -.0368117    .0161737</span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>  agebelow52 |  -.5032791    .559864    -0.90   0.369    -1.600849    .5942913</span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>  ageabove82 |  -1.479405   1.006563    -1.47   0.142    -3.452694    .4938839</span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>             |</span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a> socialclass |</span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>Manageria..  |   .2622181   .5266783     0.50   0.619    -.7702942     1.29473</span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a> Non-Manual  |  -1.227245    .525863    -2.33   0.020    -2.258159   -.1963312</span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>    Skilled  |    -2.1252   .5508147    -3.86   0.000     -3.20503    -1.04537</span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>Semi-skil~<span class="kw">d</span>  |  -3.091173   .5596054    -5.52   0.000    -4.188236   -1.994109</span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>  Unskilled  |  -4.056536   .7457017    -5.44   0.000    -5.518427   -2.594645</span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>             |</span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a>      female |   .4453072   .2310058     1.93   0.054     -.007562    .8981763</span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a>       <span class="dt">_cons</span> |   45.07279   1.002216    44.97   0.000     43.10802    47.03756</span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a>------------------------------------------------------------------------------</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>This model doesn’t do so hot, but it’s sufficient for our purposes - the F-test rejects.</p>
+<p>The interpretation of the age variables is that the coefficient on <code>age</code> represents the relationship between age and QoL for individuals between ages 52 and 81. The two coefficients on <code>agebelow52</code> and <code>ageabove82</code> are allowing those individuals with censored ages to have a unique intercept, which means they don’t affect the slope on age. If you really wanted to drill down into what this all means, you could do some fancy <code>margins</code> calls to predict the average response using <code>at()</code> to force the two dummies to the appropriate levels (not run):</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>margins, <span class="fu">at</span>(age = 51 agebelow52 = 1 ageabove82 = 0) <span class="co">///</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>         <span class="fu">at</span>(age = (52 81) agebelow52 = 0 ageabove82 = 0) <span class="co">///</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>         <span class="fu">at</span>(age=81 agebelow52 = 0 ageabove82 = 1)</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>marginsplot</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>In this case, there doesn’t seem to be much effect of age (though it is good we controlled for it!).</p>
+<p>We see a marginal effect for female, and we see some differences amongst social classes. Let’s explore them more with <code>margins</code>:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>. margins socialclass</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>Predictive margins                                       Number <span class="kw">of</span> <span class="kw">obs</span> = 5,179</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>Model <span class="kw">VCE</span>: OLS</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>Expression: Linear prediction, <span class="kw">predict</span>()</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>------------------------------------------------------------------------------</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>             |            Delta-method</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>             |     Margin   <span class="fu">std</span>. err.      t    P&gt;|t|     [95% conf. interval]</span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>-------------+----------------------------------------------------------------</span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a> socialclass |</span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>Professio~<span class="ot">l</span>  |   44.61599   .4839074    92.20   0.000     43.66733    45.56465</span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>Manageria..  |   44.87821   .2053926   218.50   0.000     44.47555    45.28086</span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a> Non-Manual  |   43.38874   .1976598   219.51   0.000     43.00125    43.77624</span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>    Skilled  |   42.49079   .2765152   153.67   0.000      41.9487    43.03288</span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>Semi-skil~<span class="kw">d</span>  |   41.52482   .2788682   148.90   0.000     40.97812    42.07152</span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>  Unskilled  |   40.55945   .5653632    71.74   0.000      39.4511     41.6678</span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>------------------------------------------------------------------------------</span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a>. margins socialclass, pwcompare(pv)</span>
+<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a>Pairwise comparisons <span class="kw">of</span> predictive margins               Number <span class="kw">of</span> <span class="kw">obs</span> = 5,179</span>
+<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a>Model <span class="kw">VCE</span>: OLS</span>
+<span id="cb9-25"><a href="#cb9-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-26"><a href="#cb9-26" aria-hidden="true" tabindex="-1"></a>Expression: Linear prediction, <span class="kw">predict</span>()</span>
+<span id="cb9-27"><a href="#cb9-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-28"><a href="#cb9-28" aria-hidden="true" tabindex="-1"></a>------------------------------------------------------------------------------</span>
+<span id="cb9-29"><a href="#cb9-29" aria-hidden="true" tabindex="-1"></a>                                      |            Delta-method    Unadjusted</span>
+<span id="cb9-30"><a href="#cb9-30" aria-hidden="true" tabindex="-1"></a>                                      |   Contrast   <span class="fu">std</span>. err.      t    P&gt;|t|</span>
+<span id="cb9-31"><a href="#cb9-31" aria-hidden="true" tabindex="-1"></a>--------------------------------------+---------------------------------------</span>
+<span id="cb9-32"><a href="#cb9-32" aria-hidden="true" tabindex="-1"></a>                          socialclass |</span>
+<span id="cb9-33"><a href="#cb9-33" aria-hidden="true" tabindex="-1"></a>              Managerial &amp; Technical  |</span>
+<span id="cb9-34"><a href="#cb9-34" aria-hidden="true" tabindex="-1"></a>                                  vs  |</span>
+<span id="cb9-35"><a href="#cb9-35" aria-hidden="true" tabindex="-1"></a>                        Professional  |   .2622181   .5266783     0.50   0.619</span>
+<span id="cb9-36"><a href="#cb9-36" aria-hidden="true" tabindex="-1"></a>          Non-Manual vs Professional  |  -1.227245    .525863    -2.33   0.020</span>
+<span id="cb9-37"><a href="#cb9-37" aria-hidden="true" tabindex="-1"></a>             Skilled vs Professional  |    -2.1252   .5508147    -3.86   0.000</span>
+<span id="cb9-38"><a href="#cb9-38" aria-hidden="true" tabindex="-1"></a>        Semi-skilled vs Professional  |  -3.091173   .5596054    -5.52   0.000</span>
+<span id="cb9-39"><a href="#cb9-39" aria-hidden="true" tabindex="-1"></a>           Unskilled vs Professional  |  -4.056536   .7457017    -5.44   0.000</span>
+<span id="cb9-40"><a href="#cb9-40" aria-hidden="true" tabindex="-1"></a>Non-Manual vs Managerial &amp; Technical  |  -1.489463   .2842616    -5.24   0.000</span>
+<span id="cb9-41"><a href="#cb9-41" aria-hidden="true" tabindex="-1"></a>   Skilled vs Managerial &amp; Technical  |  -2.387418   .3458945    -6.90   0.000</span>
+<span id="cb9-42"><a href="#cb9-42" aria-hidden="true" tabindex="-1"></a>                        Semi-skilled  |</span>
+<span id="cb9-43"><a href="#cb9-43" aria-hidden="true" tabindex="-1"></a>                                  vs  |</span>
+<span id="cb9-44"><a href="#cb9-44" aria-hidden="true" tabindex="-1"></a>              Managerial &amp; Technical  |  -3.353391   .3461459    -9.69   0.000</span>
+<span id="cb9-45"><a href="#cb9-45" aria-hidden="true" tabindex="-1"></a> Unskilled vs Managerial &amp; Technical  |  -4.318754   .6011768    -7.18   0.000</span>
+<span id="cb9-46"><a href="#cb9-46" aria-hidden="true" tabindex="-1"></a>               Skilled vs Non-Manual  |  -.8979548   .3446961    -2.61   0.009</span>
+<span id="cb9-47"><a href="#cb9-47" aria-hidden="true" tabindex="-1"></a>          Semi-skilled vs Non-Manual  |  -1.863928   .3411728    -5.46   0.000</span>
+<span id="cb9-48"><a href="#cb9-48" aria-hidden="true" tabindex="-1"></a>             Unskilled vs Non-Manual  |  -2.829291   .5978386    -4.73   0.000</span>
+<span id="cb9-49"><a href="#cb9-49" aria-hidden="true" tabindex="-1"></a>             Semi-skilled vs Skilled  |  -.9659729   .3939009    -2.45   0.014</span>
+<span id="cb9-50"><a href="#cb9-50" aria-hidden="true" tabindex="-1"></a>                Unskilled vs Skilled  |  -1.931336   .6317203    -3.06   0.002</span>
+<span id="cb9-51"><a href="#cb9-51" aria-hidden="true" tabindex="-1"></a>           Unskilled vs Semi-skilled  |   -.965363   .6305738    -1.53   0.126</span>
+<span id="cb9-52"><a href="#cb9-52" aria-hidden="true" tabindex="-1"></a>------------------------------------------------------------------------------</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>So Professional and Managerial are indistinguishable, and Semi-skilled and Unskilled are likewise indistinguishable.</p>
+<p>To fit the mixed model, the command is <code>mixed</code>. Let’s first fit it again ignoring the household random effects.</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>. mixed qol age agebelow52 ageabove82 i.socialclass female</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>Mixed-<span class="kw">effects</span> ML regression                             Number <span class="kw">of</span> <span class="kw">obs</span> =  5,179</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>                                                        Wald <span class="fu">chi2</span>(9)  = 148.97</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>Log likelihood = -18018.271                             Prob &gt; <span class="fu">chi2</span>   = 0.0000</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>------------------------------------------------------------------------------</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>         qol | Coefficient  Std. err.      z    P&gt;|z|     [95% conf. interval]</span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>-------------+----------------------------------------------------------------</span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>         age |   -.010319   .0135007    -0.76   0.445    -.0367799     .016142</span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>  agebelow52 |  -.5032791   .5593233    -0.90   0.368    -1.599533    .5929744</span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>  ageabove82 |  -1.479405    1.00559    -1.47   0.141    -3.450326    .4915162</span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>             |</span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a> socialclass |</span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>Manageria..  |   .2622181   .5261696     0.50   0.618    -.7690553    1.293492</span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a> Non-Manual  |  -1.227245    .525355    -2.34   0.019    -2.256922   -.1975681</span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>    Skilled  |    -2.1252   .5502827    -3.86   0.000    -3.203734   -1.046666</span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>Semi-skil~<span class="kw">d</span>  |  -3.091173   .5590649    -5.53   0.000     -4.18692   -1.995426</span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>  Unskilled  |  -4.056536   .7449814    -5.45   0.000    -5.516673   -2.596399</span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a>             |</span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a>      female |   .4453072   .2307827     1.93   0.054    -.0070187     .897633</span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a>       <span class="dt">_cons</span> |   45.07279   1.001248    45.02   0.000     43.11038     47.0352</span>
+<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a>------------------------------------------------------------------------------</span>
+<span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a>------------------------------------------------------------------------------</span>
+<span id="cb10-26"><a href="#cb10-26" aria-hidden="true" tabindex="-1"></a>  Random-<span class="kw">effects</span> parameters  |   Estimate   Std. err.     [95% conf. interval]</span>
+<span id="cb10-27"><a href="#cb10-27" aria-hidden="true" tabindex="-1"></a>-----------------------------+------------------------------------------------</span>
+<span id="cb10-28"><a href="#cb10-28" aria-hidden="true" tabindex="-1"></a>               <span class="kw">var</span>(Residual) |    61.5794   1.210117      59.25271    63.99746</span>
+<span id="cb10-29"><a href="#cb10-29" aria-hidden="true" tabindex="-1"></a>------------------------------------------------------------------------------</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>We get identical results. If you look at the <a href="./01-mixed-model-theory.html#mixed-model-theory">equations</a> again, when there are no random effects, the model simplifies to ordinal least squares.</p>
+<p>To add our random effect, we’ll use the following notation:</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>mixed <span class="fu">y</span> &lt;fixed <span class="kw">effects</span>&gt; || &lt;<span class="fu">group</span> <span class="kw">variable</span>&gt;:</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>The <code>||</code> splits a formula into two sides, the left of it is the fixed effects, the right is the random effects. The <code>:</code> is for including <a href="./03-random-slopes.html">random slopes</a> which we’ll discuss below.</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>. mixed qol age agebelow52 ageabove82 i.socialclass female || household:</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>Performing EM optimization ...</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>Performing <span class="kw">gradient</span>-based optimization: </span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>Iteration 0:  Log likelihood = -17951.595  </span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>Iteration 1:  Log likelihood = -17945.184  </span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>Iteration 2:  Log likelihood = -17945.183  </span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>Computing standard errors ...</span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>Mixed-<span class="kw">effects</span> ML regression                          Number <span class="kw">of</span> <span class="kw">obs</span>    =  5,179</span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>Group <span class="kw">variable</span>: household                            Number <span class="kw">of</span> groups =  3,995</span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>                                                     Obs per <span class="fu">group</span>:</span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>                                                                  <span class="fu">min</span> =      1</span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>                                                                  avg =    1.3</span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a>                                                                  <span class="fu">max</span> =      3</span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a>                                                     Wald <span class="fu">chi2</span>(9)     = 129.84</span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a>Log likelihood = -17945.183                          Prob &gt; <span class="fu">chi2</span>      = 0.0000</span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a>------------------------------------------------------------------------------</span>
+<span id="cb12-22"><a href="#cb12-22" aria-hidden="true" tabindex="-1"></a>         qol | Coefficient  Std. err.      z    P&gt;|z|     [95% conf. interval]</span>
+<span id="cb12-23"><a href="#cb12-23" aria-hidden="true" tabindex="-1"></a>-------------+----------------------------------------------------------------</span>
+<span id="cb12-24"><a href="#cb12-24" aria-hidden="true" tabindex="-1"></a>         age |  -.0102437   .0139236    -0.74   0.462    -.0375335    .0170461</span>
+<span id="cb12-25"><a href="#cb12-25" aria-hidden="true" tabindex="-1"></a>  agebelow52 |   -.379831   .5276012    -0.72   0.472     -1.41391    .6542483</span>
+<span id="cb12-26"><a href="#cb12-26" aria-hidden="true" tabindex="-1"></a>  ageabove82 |  -1.210758    .986185    -1.23   0.220    -3.143646    .7221287</span>
+<span id="cb12-27"><a href="#cb12-27" aria-hidden="true" tabindex="-1"></a>             |</span>
+<span id="cb12-28"><a href="#cb12-28" aria-hidden="true" tabindex="-1"></a> socialclass |</span>
+<span id="cb12-29"><a href="#cb12-29" aria-hidden="true" tabindex="-1"></a>Manageria..  |   .2347399   .5116288     0.46   0.646    -.7680341    1.237514</span>
+<span id="cb12-30"><a href="#cb12-30" aria-hidden="true" tabindex="-1"></a> Non-Manual  |   -1.09934   .5130227    -2.14   0.032    -2.104846   -.0938337</span>
+<span id="cb12-31"><a href="#cb12-31" aria-hidden="true" tabindex="-1"></a>    Skilled  |  -1.802139   .5375521    -3.35   0.001    -2.855722   -.7485564</span>
+<span id="cb12-32"><a href="#cb12-32" aria-hidden="true" tabindex="-1"></a>Semi-skil~<span class="kw">d</span>  |   -2.97498   .5493453    -5.42   0.000    -4.051677   -1.898283</span>
+<span id="cb12-33"><a href="#cb12-33" aria-hidden="true" tabindex="-1"></a>  Unskilled  |  -3.555772   .7322568    -4.86   0.000    -4.990969   -2.120575</span>
+<span id="cb12-34"><a href="#cb12-34" aria-hidden="true" tabindex="-1"></a>             |</span>
+<span id="cb12-35"><a href="#cb12-35" aria-hidden="true" tabindex="-1"></a>      female |   .5708249   .2086576     2.74   0.006     .1618636    .9797862</span>
+<span id="cb12-36"><a href="#cb12-36" aria-hidden="true" tabindex="-1"></a>       <span class="dt">_cons</span> |   44.78498   1.022019    43.82   0.000     42.78186     46.7881</span>
+<span id="cb12-37"><a href="#cb12-37" aria-hidden="true" tabindex="-1"></a>------------------------------------------------------------------------------</span>
+<span id="cb12-38"><a href="#cb12-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-39"><a href="#cb12-39" aria-hidden="true" tabindex="-1"></a>------------------------------------------------------------------------------</span>
+<span id="cb12-40"><a href="#cb12-40" aria-hidden="true" tabindex="-1"></a>  Random-<span class="kw">effects</span> parameters  |   Estimate   Std. err.     [95% conf. interval]</span>
+<span id="cb12-41"><a href="#cb12-41" aria-hidden="true" tabindex="-1"></a>-----------------------------+------------------------------------------------</span>
+<span id="cb12-42"><a href="#cb12-42" aria-hidden="true" tabindex="-1"></a>household: Identity          |</span>
+<span id="cb12-43"><a href="#cb12-43" aria-hidden="true" tabindex="-1"></a>                  <span class="kw">var</span>(<span class="dt">_cons</span>) |   22.93389    1.79542      19.67161    26.73718</span>
+<span id="cb12-44"><a href="#cb12-44" aria-hidden="true" tabindex="-1"></a>-----------------------------+------------------------------------------------</span>
+<span id="cb12-45"><a href="#cb12-45" aria-hidden="true" tabindex="-1"></a>               <span class="kw">var</span>(Residual) |   38.98733   1.613297      35.95015     42.2811</span>
+<span id="cb12-46"><a href="#cb12-46" aria-hidden="true" tabindex="-1"></a>------------------------------------------------------------------------------</span>
+<span id="cb12-47"><a href="#cb12-47" aria-hidden="true" tabindex="-1"></a>LR <span class="kw">test</span> vs. linear <span class="kw">model</span>: chibar2(01) = 146.18        Prob &gt;= chibar2 = 0.0000</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Let’s walk through the output. Note that what we are calling the random effects (e.g.&nbsp;individuals in a repeated measures situation, classrooms in a students nested in classroom situation), Stata refers to as “groups” in the top of the output.</p>
+<ul>
+<li>You probably noticed how slow it is - at the very top, you’ll see that the solution is arrived at iteratively. Recall that any regression model aside from OLS requires an iterative solution.</li>
+<li>The log likelihood is how the iteration works; essentially the model “guesses” choices for the coefficients, and finds the set of coefficients that minimize the log likelihood. Of course, the “guess” is much smarter than random. The actual value of the log likelihood is meaningless.</li>
+<li>Since we are dealing with repeated measures of some sort, instead of a single sample size, we record the total number of obs, the number of groups (unique entries in the random effects) and min/mean/max of the groups. Just ensure there are no surprises in these numbers. In this model, the quality of life has a good chunk of missingness, so we’re losing about 2000 individuals.</li>
+<li>The <span class="math inline">\(\chi^2\)</span> test tests the hypothesis that all coefficients are simultaneously 0.
+<ul>
+<li>We have a significant p-value, so we continue with the interpretation.</li>
+</ul></li>
+<li>The coefficients table is interpreted just as in linear regression, with the addendum that each coefficient is also controlling for the structure introduced by the random effects.
+<ul>
+<li>There is still nothing informative in age, however, compared to OLS, the two dummy variables have notably different coefficients.</li>
+<li>We’ll have to check whether there is any difference in our conclusion regarding social class.</li>
+<li>The coefficient on gender is larger and much more significant.</li>
+</ul></li>
+<li>The second table (“Random-effects parameters”) gives us information about the error structure. The <code>household:</code> section is examining whether there is variation across households above and beyond the differences in the controlled variables. Since the estimate of <code>var(_cons)</code> (the estimated variance of the constant per person - the individual level random effect) is non-zero (and not close to zero), that is evidence that the random effect is necessary. If the estimate was 0 or close to 0, that would be evidence that the random effect is unnecessary and that any difference between individuals is already accounted for by the covariates.</li>
+<li>The estimated variance of the residuals is any additional variation between observations. This is akin to the residuals from linear regression.</li>
+<li>The <span class="math inline">\(\chi^2\)</span> test at the bottom is a formal test of the inclusion of the random effects versus a <a href="https://errickson.net/stata-regression/01-regression.html">linear regression</a> model without the random effects. We reject the null that the models are equivalent, so it is appropriate to include the random effects.</li>
+</ul>
+<p>Let’s quickly examine the social class categories. The calls to <code>margins</code> are identical, but they operate slightly differently with the random effects. Recall that the <code>margins</code> command works by assuming every row data is a given social class, then uses the observed values of the other fixed effects and the regression equation to predict the outcome, and averaging to obtain the marginal means. This is <em>not</em> the case with the random effects; the random effects (<span class="math inline">\(\kappa_j\)</span>) are assumed to be 0. So for any given household, the predicted response could be higher or lower, but on aggregate across all households, we are estimating the marginal means.</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>. margins socialclass</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>Predictive margins                                       Number <span class="kw">of</span> <span class="kw">obs</span> = 5,179</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>Expression: Linear prediction, fixed portion, <span class="kw">predict</span>()</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>------------------------------------------------------------------------------</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>             |            Delta-method</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>             |     Margin   <span class="fu">std</span>. err.      z    P&gt;|z|     [95% conf. interval]</span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>-------------+----------------------------------------------------------------</span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a> socialclass |</span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>Professio~<span class="ot">l</span>  |   44.41056   .4747326    93.55   0.000      43.4801    45.34101</span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>Manageria..  |    44.6453    .207459   215.20   0.000     44.23868    45.05191</span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a> Non-Manual  |   43.31122    .198432   218.27   0.000      42.9223    43.70014</span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>    Skilled  |   42.60842   .2721936   156.54   0.000     42.07493    43.14191</span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a>Semi-skil~<span class="kw">d</span>  |   41.43558   .2762047   150.02   0.000     40.89422    41.97693</span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a>  Unskilled  |   40.85478    .555399    73.56   0.000     39.76622    41.94335</span>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a>------------------------------------------------------------------------------</span>
+<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a>. margins socialclass, pwcompare(pv)</span>
+<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a>Pairwise comparisons <span class="kw">of</span> predictive margins               Number <span class="kw">of</span> <span class="kw">obs</span> = 5,179</span>
+<span id="cb13-23"><a href="#cb13-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-24"><a href="#cb13-24" aria-hidden="true" tabindex="-1"></a>Expression: Linear prediction, fixed portion, <span class="kw">predict</span>()</span>
+<span id="cb13-25"><a href="#cb13-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-26"><a href="#cb13-26" aria-hidden="true" tabindex="-1"></a>------------------------------------------------------------------------------</span>
+<span id="cb13-27"><a href="#cb13-27" aria-hidden="true" tabindex="-1"></a>                                      |            Delta-method    Unadjusted</span>
+<span id="cb13-28"><a href="#cb13-28" aria-hidden="true" tabindex="-1"></a>                                      |   Contrast   <span class="fu">std</span>. err.      z    P&gt;|z|</span>
+<span id="cb13-29"><a href="#cb13-29" aria-hidden="true" tabindex="-1"></a>--------------------------------------+---------------------------------------</span>
+<span id="cb13-30"><a href="#cb13-30" aria-hidden="true" tabindex="-1"></a>                          socialclass |</span>
+<span id="cb13-31"><a href="#cb13-31" aria-hidden="true" tabindex="-1"></a>              Managerial &amp; Technical  |</span>
+<span id="cb13-32"><a href="#cb13-32" aria-hidden="true" tabindex="-1"></a>                                  vs  |</span>
+<span id="cb13-33"><a href="#cb13-33" aria-hidden="true" tabindex="-1"></a>                        Professional  |   .2347399   .5116288     0.46   0.646</span>
+<span id="cb13-34"><a href="#cb13-34" aria-hidden="true" tabindex="-1"></a>          Non-Manual vs Professional  |   -1.09934   .5130227    -2.14   0.032</span>
+<span id="cb13-35"><a href="#cb13-35" aria-hidden="true" tabindex="-1"></a>             Skilled vs Professional  |  -1.802139   .5375521    -3.35   0.001</span>
+<span id="cb13-36"><a href="#cb13-36" aria-hidden="true" tabindex="-1"></a>        Semi-skilled vs Professional  |   -2.97498   .5493453    -5.42   0.000</span>
+<span id="cb13-37"><a href="#cb13-37" aria-hidden="true" tabindex="-1"></a>           Unskilled vs Professional  |  -3.555772   .7322568    -4.86   0.000</span>
+<span id="cb13-38"><a href="#cb13-38" aria-hidden="true" tabindex="-1"></a>Non-Manual vs Managerial &amp; Technical  |   -1.33408   .2766414    -4.82   0.000</span>
+<span id="cb13-39"><a href="#cb13-39" aria-hidden="true" tabindex="-1"></a>   Skilled vs Managerial &amp; Technical  |  -2.036879   .3383401    -6.02   0.000</span>
+<span id="cb13-40"><a href="#cb13-40" aria-hidden="true" tabindex="-1"></a>                        Semi-skilled  |</span>
+<span id="cb13-41"><a href="#cb13-41" aria-hidden="true" tabindex="-1"></a>                                  vs  |</span>
+<span id="cb13-42"><a href="#cb13-42" aria-hidden="true" tabindex="-1"></a>              Managerial &amp; Technical  |   -3.20972   .3412208    -9.41   0.000</span>
+<span id="cb13-43"><a href="#cb13-43" aria-hidden="true" tabindex="-1"></a> Unskilled vs Managerial &amp; Technical  |  -3.790512    .591052    -6.41   0.000</span>
+<span id="cb13-44"><a href="#cb13-44" aria-hidden="true" tabindex="-1"></a>               Skilled vs Non-Manual  |  -.7027994     .33355    -2.11   0.035</span>
+<span id="cb13-45"><a href="#cb13-45" aria-hidden="true" tabindex="-1"></a>          Semi-skilled vs Non-Manual  |   -1.87564   .3334359    -5.63   0.000</span>
+<span id="cb13-46"><a href="#cb13-46" aria-hidden="true" tabindex="-1"></a>             Unskilled vs Non-Manual  |  -2.456432   .5864838    -4.19   0.000</span>
+<span id="cb13-47"><a href="#cb13-47" aria-hidden="true" tabindex="-1"></a>             Semi-skilled vs Skilled  |  -1.172841   .3799212    -3.09   0.002</span>
+<span id="cb13-48"><a href="#cb13-48" aria-hidden="true" tabindex="-1"></a>                Unskilled vs Skilled  |  -1.753633   .6150853    -2.85   0.004</span>
+<span id="cb13-49"><a href="#cb13-49" aria-hidden="true" tabindex="-1"></a>           Unskilled vs Semi-skilled  |   -.580792   .6134086    -0.95   0.344</span>
+<span id="cb13-50"><a href="#cb13-50" aria-hidden="true" tabindex="-1"></a>------------------------------------------------------------------------------</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Here our conclusions don’t change - Unskilled &amp; Semi-skilled have the same marginal means, and Professional and Managerial have the same marginal means, all other comparisons are significant.</p>
+</section>
+<section id="assumptions" class="level2" data-number="2.2">
+<h2 data-number="2.2" class="anchored" data-anchor-id="assumptions"><span class="header-section-number">2.2</span> Assumptions</h2>
+<p>The <a href="https://errickson.net/stata-regression/01-regression.html#relationship-is-linear-and-additive">linear additivity</a> remains necessary - we need to assume that the true relationship between the predictors and the outcome is linear (as opposed to something more complicated like exponential) and additive (as opposed to multiplicative, unless we are including interactions). With <code>regress</code>, we could use the <code>rvf</code> post-estimation command to generate a plot of residuals versus predicted values. The <code>rvfplot</code> command does not work after <code>mixed</code>, but we can generate it manually.</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>. <span class="kw">predict</span> <span class="kw">fitted</span>, <span class="kw">xb</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>(524 <span class="fu">missing</span> <span class="kw">values</span> generated)</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>. <span class="kw">predict</span> residuals, res</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>(2,028 <span class="fu">missing</span> <span class="kw">values</span> generated)</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>. <span class="kw">twoway</span> <span class="kw">scatter</span> residuals <span class="kw">fitted</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p><img src="graphs/02-3.png" class="img-fluid"></p>
+<p>The odd grouping pattern shown is due to the two categorical variables (gender and social class in the model). Each “blob” represents one permutation. You can see this by overlaying many plots:</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>. <span class="kw">twoway</span> (<span class="kw">scatter</span> residuals <span class="kw">fitted</span> <span class="kw">if</span> female == 1 &amp; socialclass == 1) <span class="co">///</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>&gt;        (<span class="kw">scatter</span> residuals <span class="kw">fitted</span> <span class="kw">if</span> female == 0 &amp; socialclass == 1) <span class="co">///</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>&gt;        (<span class="kw">scatter</span> residuals <span class="kw">fitted</span> <span class="kw">if</span> female == 1 &amp; socialclass == 2) <span class="co">///</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>&gt;        (<span class="kw">scatter</span> residuals <span class="kw">fitted</span> <span class="kw">if</span> female == 0 &amp; socialclass == 2) <span class="co">///</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>&gt;        (<span class="kw">scatter</span> residuals <span class="kw">fitted</span> <span class="kw">if</span> female == 1 &amp; socialclass == 3) <span class="co">///</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>&gt;        (<span class="kw">scatter</span> residuals <span class="kw">fitted</span> <span class="kw">if</span> female == 0 &amp; socialclass == 3) <span class="co">///</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>&gt;        (<span class="kw">scatter</span> residuals <span class="kw">fitted</span> <span class="kw">if</span> female == 1 &amp; socialclass == 4) <span class="co">///</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>&gt;        (<span class="kw">scatter</span> residuals <span class="kw">fitted</span> <span class="kw">if</span> female == 0 &amp; socialclass == 4) <span class="co">///</span></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>&gt;        (<span class="kw">scatter</span> residuals <span class="kw">fitted</span> <span class="kw">if</span> female == 1 &amp; socialclass == 5) <span class="co">///</span></span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>&gt;        (<span class="kw">scatter</span> residuals <span class="kw">fitted</span> <span class="kw">if</span> female == 0 &amp; socialclass == 5) <span class="co">///</span></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>&gt;        (<span class="kw">scatter</span> residuals <span class="kw">fitted</span> <span class="kw">if</span> female == 1 &amp; socialclass == 6) <span class="co">///</span></span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>&gt;        (<span class="kw">scatter</span> residuals <span class="kw">fitted</span> <span class="kw">if</span> female == 0 &amp; socialclass == 6), <span class="co">///</span></span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>&gt;        <span class="bn">legend</span>(<span class="kw">off</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p><img src="graphs/02-4.png" class="img-fluid"></p>
+<p>Overall though we see no pattern in the residuals.</p>
+<p>The other two assumptions which are relevant in linear regression, <a href="https://errickson.net/stata-regression/01-regression.html#errors-are-homogeneous">homogeneity of residuals</a> and <a href="https://errickson.net/stata-regression/01-regression.html#independence">independence</a>, are both violated by design in a mixed model. However, you need to assume that no other violations occur - if there is additional variance heterogeneity, such as that brought above by very skewed response variables, you may need to make adjustments. Similarly, if there is some other form of dependence you are not yet modeling, you need to adjust your model to account for it.</p>
+</section>
+<section id="predicting-the-random-effects" class="level2" data-number="2.3">
+<h2 data-number="2.3" class="anchored" data-anchor-id="predicting-the-random-effects"><span class="header-section-number">2.3</span> Predicting the random effects</h2>
+<p>While keeping in mind that we do not <em>estimate</em> the random intercepts when fitting this model, we can <em>predict</em> their BLUPS - best linear unbiased predictors. What’s the difference? It’s subtle, but basically we have far less confidence in predicted values than in estimated values. So any confidence intervals will be substantially larger. We know from the model output above that there is variance among the household random intercepts but don’t have a sense of the pattern - is there a single household that’s much different than all the rest? Are they all rather noisy? Or something in between. We can test this.</p>
+<p>First, we’ll predict the random intercepts and the standard error of those intercepts.</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>. <span class="kw">predict</span> rintercept, <span class="kw">reffects</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>(1,592 <span class="fu">missing</span> <span class="kw">values</span> generated)</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>. <span class="kw">predict</span> rintse, reses</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>(1,592 <span class="fu">missing</span> <span class="kw">values</span> generated)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>As noted above, the quality of life variable is missing for around 2000 individuals, so we’ll remove them from the data for ease (calling <code>preserve</code> first to recover the full data later).</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>. <span class="kw">preserve</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>. <span class="kw">drop</span> <span class="kw">if</span> <span class="fu">missing</span>(qol)</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>(1,670 observations deleted)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Now within each household, the random intercepts and standard errors are identical, so we can collapse down to the household level.</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>. <span class="kw">collapse</span> (first) rintercept rintse (<span class="fu">count</span>) age, <span class="kw">by</span>(household)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Now we will sort by those random intercepts to make the output look nicer, generate a variable indicating row number for plotting on the x-axis, and compute upper and lower bounds of confidence intervals. Finally we generate a dummy variable to identify which households have confidence intervals not crossing zero.</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>. <span class="kw">sort</span> rintercept</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>. <span class="kw">gen</span> n = <span class="dt">_n</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>. <span class="kw">gen</span> lb = rintercept - 1.96*rintse</span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>(209 <span class="fu">missing</span> <span class="kw">values</span> generated)</span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>. <span class="kw">gen</span> ub = rintercept + 1.96*rintse</span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>(209 <span class="fu">missing</span> <span class="kw">values</span> generated)</span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>. <span class="kw">gen</span> significant = (lb &gt; 0 &amp; ub &gt; 0) | (lb &lt; 0 &amp; ub &lt; 0)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Now we can plot.</p>
+<div class="sourceCode" id="cb20"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>. <span class="kw">twoway</span> (rcap ub lb n <span class="kw">if</span> significant) <span class="co">///</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>&gt;        (<span class="kw">scatter</span> rintercept n <span class="kw">if</span> significant), <span class="co">///</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>&gt;          <span class="bn">legend</span>(<span class="kw">off</span>) <span class="kw">yline</span>(0)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p><img src="graphs/02-5.png" class="img-fluid"></p>
+<p>The range in the middle is all households which we predict to have intercepts not distinguishable from zero. We can see that most of the random intercept’s confidence intervals cross with the exception of very few large values and a larger chunk of small values.</p>
+<p>So there’s a negative skew to the distribution of random intercepts; most households had no additional error, but a decent chunk had significantly lower outcome than we would expect given their personel attributes. We can count exactly how many fall below:</p>
+<div class="sourceCode" id="cb21"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>. <span class="fu">count</span> <span class="kw">if</span> ub &lt; 0 &amp; lb &lt; 0</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>  100</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="nested-and-crossed-random-effects" class="level2" data-number="2.4">
+<h2 data-number="2.4" class="anchored" data-anchor-id="nested-and-crossed-random-effects"><span class="header-section-number">2.4</span> Nested and Crossed random effects</h2>
+<p>The model we’ve fit so far has a single random intercept, corresponding to household. However, we could have more than one.</p>
+<section id="nested-random-effects" class="level3" data-number="2.4.1">
+<h3 data-number="2.4.1" class="anchored" data-anchor-id="nested-random-effects"><span class="header-section-number">2.4.1</span> Nested random effects</h3>
+<p>Nested random effects exist when we have a nested level structure. In this data, we actually have this as each household belongs to a single sampling cluster, identified by the <code>cluster</code> variable.</p>
+<p>We can re-fit the model including a random intercept for cluster, then within each cluster, a random intercept for household. We do so by adding another equation via <code>||</code>:</p>
+<div class="sourceCode" id="cb22"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>. <span class="kw">restore</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>. mixed qol age agebelow52 ageabove82 i.socialclass female || <span class="kw">cluster</span>: || house</span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>&gt; <span class="kw">hold</span>:</span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>Performing EM optimization ...</span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>Performing <span class="kw">gradient</span>-based optimization: </span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a>Iteration 0:  Log likelihood = -17961.965  </span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a>Iteration 1:  Log likelihood = -17945.568  </span>
+<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a>Iteration 2:  Log likelihood =  -17945.22  </span>
+<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a>Iteration 3:  Log likelihood = -17945.184  </span>
+<span id="cb22-13"><a href="#cb22-13" aria-hidden="true" tabindex="-1"></a>Iteration 4:  Log likelihood = -17945.183  </span>
+<span id="cb22-14"><a href="#cb22-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-15"><a href="#cb22-15" aria-hidden="true" tabindex="-1"></a>Computing standard errors ...</span>
+<span id="cb22-16"><a href="#cb22-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-17"><a href="#cb22-17" aria-hidden="true" tabindex="-1"></a>Mixed-<span class="kw">effects</span> ML regression                             Number <span class="kw">of</span> <span class="kw">obs</span> =  5,179</span>
+<span id="cb22-18"><a href="#cb22-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-19"><a href="#cb22-19" aria-hidden="true" tabindex="-1"></a>        Grouping information</span>
+<span id="cb22-20"><a href="#cb22-20" aria-hidden="true" tabindex="-1"></a>        -------------------------------------------------------------</span>
+<span id="cb22-21"><a href="#cb22-21" aria-hidden="true" tabindex="-1"></a>                        |     No. <span class="kw">of</span>       Observations per <span class="fu">group</span></span>
+<span id="cb22-22"><a href="#cb22-22" aria-hidden="true" tabindex="-1"></a>         Group <span class="kw">variable</span> |     groups    Minimum    Average    Maximum</span>
+<span id="cb22-23"><a href="#cb22-23" aria-hidden="true" tabindex="-1"></a>        ----------------+--------------------------------------------</span>
+<span id="cb22-24"><a href="#cb22-24" aria-hidden="true" tabindex="-1"></a>                <span class="kw">cluster</span> |        619          1        8.4         28</span>
+<span id="cb22-25"><a href="#cb22-25" aria-hidden="true" tabindex="-1"></a>              household |      3,995          1        1.3          3</span>
+<span id="cb22-26"><a href="#cb22-26" aria-hidden="true" tabindex="-1"></a>        -------------------------------------------------------------</span>
+<span id="cb22-27"><a href="#cb22-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-28"><a href="#cb22-28" aria-hidden="true" tabindex="-1"></a>                                                        Wald <span class="fu">chi2</span>(9)  = 129.84</span>
+<span id="cb22-29"><a href="#cb22-29" aria-hidden="true" tabindex="-1"></a>Log likelihood = -17945.183                             Prob &gt; <span class="fu">chi2</span>   = 0.0000</span>
+<span id="cb22-30"><a href="#cb22-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-31"><a href="#cb22-31" aria-hidden="true" tabindex="-1"></a>------------------------------------------------------------------------------</span>
+<span id="cb22-32"><a href="#cb22-32" aria-hidden="true" tabindex="-1"></a>         qol | Coefficient  Std. err.      z    P&gt;|z|     [95% conf. interval]</span>
+<span id="cb22-33"><a href="#cb22-33" aria-hidden="true" tabindex="-1"></a>-------------+----------------------------------------------------------------</span>
+<span id="cb22-34"><a href="#cb22-34" aria-hidden="true" tabindex="-1"></a>         age |  -.0102438   .0139236    -0.74   0.462    -.0375336     .017046</span>
+<span id="cb22-35"><a href="#cb22-35" aria-hidden="true" tabindex="-1"></a>  agebelow52 |  -.3798295   .5275998    -0.72   0.472    -1.413906    .6542472</span>
+<span id="cb22-36"><a href="#cb22-36" aria-hidden="true" tabindex="-1"></a>  ageabove82 |  -1.210748   .9861846    -1.23   0.220    -3.143634    .7221388</span>
+<span id="cb22-37"><a href="#cb22-37" aria-hidden="true" tabindex="-1"></a>             |</span>
+<span id="cb22-38"><a href="#cb22-38" aria-hidden="true" tabindex="-1"></a> socialclass |</span>
+<span id="cb22-39"><a href="#cb22-39" aria-hidden="true" tabindex="-1"></a>Manageria..  |   .2347385   .5116282     0.46   0.646    -.7680344    1.237511</span>
+<span id="cb22-40"><a href="#cb22-40" aria-hidden="true" tabindex="-1"></a> Non-Manual  |  -1.099335   .5130222    -2.14   0.032     -2.10484   -.0938296</span>
+<span id="cb22-41"><a href="#cb22-41" aria-hidden="true" tabindex="-1"></a>    Skilled  |  -1.802128   .5375516    -3.35   0.001     -2.85571   -.7485464</span>
+<span id="cb22-42"><a href="#cb22-42" aria-hidden="true" tabindex="-1"></a>Semi-skil~<span class="kw">d</span>  |  -2.974975   .5493449    -5.42   0.000    -4.051671   -1.898278</span>
+<span id="cb22-43"><a href="#cb22-43" aria-hidden="true" tabindex="-1"></a>  Unskilled  |  -3.555756   .7322564    -4.86   0.000    -4.990952   -2.120559</span>
+<span id="cb22-44"><a href="#cb22-44" aria-hidden="true" tabindex="-1"></a>             |</span>
+<span id="cb22-45"><a href="#cb22-45" aria-hidden="true" tabindex="-1"></a>      female |   .5708289   .2086569     2.74   0.006     .1618689    .9797889</span>
+<span id="cb22-46"><a href="#cb22-46" aria-hidden="true" tabindex="-1"></a>       <span class="dt">_cons</span> |   44.78498    1.02202    43.82   0.000     42.78186     46.7881</span>
+<span id="cb22-47"><a href="#cb22-47" aria-hidden="true" tabindex="-1"></a>------------------------------------------------------------------------------</span>
+<span id="cb22-48"><a href="#cb22-48" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-49"><a href="#cb22-49" aria-hidden="true" tabindex="-1"></a>------------------------------------------------------------------------------</span>
+<span id="cb22-50"><a href="#cb22-50" aria-hidden="true" tabindex="-1"></a>  Random-<span class="kw">effects</span> parameters  |   Estimate   Std. err.     [95% conf. interval]</span>
+<span id="cb22-51"><a href="#cb22-51" aria-hidden="true" tabindex="-1"></a>-----------------------------+------------------------------------------------</span>
+<span id="cb22-52"><a href="#cb22-52" aria-hidden="true" tabindex="-1"></a><span class="kw">cluster</span>: Identity            |</span>
+<span id="cb22-53"><a href="#cb22-53" aria-hidden="true" tabindex="-1"></a>                  <span class="kw">var</span>(<span class="dt">_cons</span>) |   5.41e-09   1.56e-06      1.2e-254    2.5e+237</span>
+<span id="cb22-54"><a href="#cb22-54" aria-hidden="true" tabindex="-1"></a>-----------------------------+------------------------------------------------</span>
+<span id="cb22-55"><a href="#cb22-55" aria-hidden="true" tabindex="-1"></a>household: Identity          |</span>
+<span id="cb22-56"><a href="#cb22-56" aria-hidden="true" tabindex="-1"></a>                  <span class="kw">var</span>(<span class="dt">_cons</span>) |    22.9346   1.795878      19.67155    26.73893</span>
+<span id="cb22-57"><a href="#cb22-57" aria-hidden="true" tabindex="-1"></a>-----------------------------+------------------------------------------------</span>
+<span id="cb22-58"><a href="#cb22-58" aria-hidden="true" tabindex="-1"></a>               <span class="kw">var</span>(Residual) |   38.98675   1.613254      35.94965    42.28043</span>
+<span id="cb22-59"><a href="#cb22-59" aria-hidden="true" tabindex="-1"></a>------------------------------------------------------------------------------</span>
+<span id="cb22-60"><a href="#cb22-60" aria-hidden="true" tabindex="-1"></a>LR <span class="kw">test</span> vs. linear <span class="kw">model</span>: <span class="fu">chi2</span>(2) = 146.18                Prob &gt; <span class="fu">chi2</span> = 0.0000</span>
+<span id="cb22-61"><a href="#cb22-61" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-62"><a href="#cb22-62" aria-hidden="true" tabindex="-1"></a>Note: LR <span class="kw">test</span> is conservative and provided only <span class="kw">for</span> reference.</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Overall the output looks very similar to the model before, but now in the last table, the Random-effects Parameters, we have estimates of three variances, with the addition of cluster random effects.</p>
+<p>In this case, the estimated variance is almost 0 (so close to 0 that Stata refuses to even compute a confidence interval), so we do not need this random effect - once we control for the fixed effects, there is no additional error common to each cluster. This shouldn’t be too surprising, as the clusters in this data are part of the survey design (which, again, we are ignoring) and somewhat meaningless.</p>
+<p>If you compare the results of this model to the first model, you’ll see that the results are basically identical - as we expect when adding a predictor that does not improve model fit. It’s up to you whether you want to remove it. On the one hand, you can now appropriately claim you’re controlling for cluster-effects, but on the other hand, an additional random intercept makes the model converge much more slowly.</p>
+</section>
+<section id="crossed-random-effects" class="level3" data-number="2.4.2">
+<h3 data-number="2.4.2" class="anchored" data-anchor-id="crossed-random-effects"><span class="header-section-number">2.4.2</span> Crossed random effects</h3>
+<p>In the above design, we had nesting - within each cluster there are households, within each household there are individuals. However, this need not always be the case.</p>
+<p>For example, imagine you lead a large research team where 100 research assistants are conducting repeated surveys of individuals. Here we have repeated measures per person, but we also potentially have interviewer effects that we want to include as random intercepts. However, there is no nesting structure here. Instead, we call this a crossed random effects structure.</p>
+<p>Here’s the rub though: There is no such thing as “nested random effects”. Everything is crossed. So why do nested random effects exist? Consider the following small data set.</p>
+<table class="table">
+<thead>
+<tr class="header">
+<th>classroom</th>
+<th>studentid</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>a</td>
+<td>1</td>
+</tr>
+<tr class="even">
+<td>a</td>
+<td>2</td>
+</tr>
+<tr class="odd">
+<td>b</td>
+<td>1</td>
+</tr>
+<tr class="even">
+<td>b</td>
+<td>2</td>
+</tr>
+</tbody>
+</table>
+<p>Here the first row of data represents the first student in classroom a, and the third row represents the first student in classroom b - both students are <strong>not the same student</strong>. If we attempted to tell Stata that these random effects are crossed, Stata will incorrectly think rows 1 and 3 are the same student. By telling Stata that <code>studentid</code> is nested inside <code>classroom</code>, it knows that student 1 from classroom a is distinct from student 1 from classroom b.</p>
+<p>However, if we were more clever with our data, we might instead store our data as:</p>
+<table class="table">
+<thead>
+<tr class="header">
+<th>classroom</th>
+<th>studentid</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>a</td>
+<td>1</td>
+</tr>
+<tr class="even">
+<td>a</td>
+<td>2</td>
+</tr>
+<tr class="odd">
+<td>b</td>
+<td>3</td>
+</tr>
+<tr class="even">
+<td>b</td>
+<td>4</td>
+</tr>
+</tbody>
+</table>
+<p>Now if we tell Stata these are crossed random effects, it won’t get confused! So all nested random effects are just a way to make up for the fact that you may have been foolish in storing your data.</p>
+<p>Unfortunately fitting crossed random effects in Stata is a bit unwieldy. Here’s how we’d fit the model we’ve been working with with crossed random effects.</p>
+<div class="sourceCode" id="cb23"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>mixed qol age agebelow52 ageabove82 i.socialclass female || <span class="co">///</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>          <span class="dt">_all</span>:R.household || <span class="dt">_all</span>:R.<span class="kw">cluster</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>However, this model will run for a while and then fail - just because functionally crossed and nested effects are the same, does not mean the algorithm which the software uses functions the same. Stata simply fails more often with crossed random effects. On the other hand, the <code>lmer</code> command in R has an easier time of specifying crossed effects and can converge this model just fine.</p>
+</section>
+</section>
+<section id="choosing-random-or-fixed-effects" class="level2" data-number="2.5">
+<h2 data-number="2.5" class="anchored" data-anchor-id="choosing-random-or-fixed-effects"><span class="header-section-number">2.5</span> Choosing Random or Fixed effects</h2>
+<p>When these models were first being developed, the recommended guidelines were:</p>
+<ul>
+<li>Fixed effects are used when the categories in the data represent all possible categories. For example, the collection of all schools in a given state.</li>
+<li>Random effects are used when the categories in the data represent a sample of all possible categories. For example, a sample of students in a school.</li>
+</ul>
+<p>There are plenty of grey-areas in between so this advice isn’t always useful. Instead think of it from a practical point of view:</p>
+<ol type="1">
+<li>Do you have a large enough sample size to include fixed effects (recall the rule of 10-20 observations per predictor. If each person in your data has no more than 2 observations, that’s far too many fixed effects)?</li>
+<li>Do you need to actually estimate the intercept within each group, as opposed to just controlling for group differences? (We can always <a href="./02-fitting-mixed-models.html#predicting_the_random_effects">predict random effects</a> but that’s not as powerful as estimating.)</li>
+</ol>
+<p>If the answer to both these are No, include as random effects.</p>
+<p>(If you don’t need to estimate the group intercepts but the number of groups is low (say less than 5-10), it’s more common to just include it as a fixed effect anyways. But that’s just convention, not due to any strong argument which I’m aware of.)</p>
+</section>
+<section id="miscellaneous" class="level2" data-number="2.6">
+<h2 data-number="2.6" class="anchored" data-anchor-id="miscellaneous"><span class="header-section-number">2.6</span> Miscellaneous</h2>
+<p>There are various concerns we had with non-mixed models; most still hold. See the previous set of notes (linked to each topic) for more details.</p>
+<p><a href="https://errickson.net/stata-regression/01-regression.html#multicollinearity">Multicollinearity</a>, the issue that predictor variables can be correlated amongst each other to provide false positive results, remains an issue in linear regression. The VIF cannot be estimated after a mixed model.</p>
+<p><a href="https://errickson.net/stata-regression/01-regression.html#overfitting">Overfitting</a> is still possible. Sample size considerations are tricky, but the general rule of 10-20 observations per predictor is a good starting point. There’s the additional complexity of the group structure, but generally there are no restrictions on it. However, in practice, in you have a large number of groups with only a single measurement, <a href="./02-fitting-mixed-models.html#convergence-issues">convergence issues</a> tend to arise.</p>
+<p><a href="https://errickson.net/stata-regression/01-regression.html#model-selection-is-bad">Model selection</a> is still a very bad idea to do.</p>
+<p><a href="https://errickson.net/stata-regression/01-regression.html#robust-standard-errors">Robust standard errors</a> are still obtainable using <code>vce(robust)</code> option.</p>
+</section>
+<section id="convergence-issues" class="level2" data-number="2.7">
+<h2 data-number="2.7" class="anchored" data-anchor-id="convergence-issues"><span class="header-section-number">2.7</span> Convergence issues</h2>
+<p>With mixed models, the solution is arrived at iteratively, which means it can fail to converge for a number of reasons. Generally, failure to converge will be due to an issue with the data.</p>
+<p>The first thing to try is scaling all your parameters:</p>
+<div class="sourceCode" id="cb24"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="kw">egen</span> scaled_var = <span class="fu">std</span>(<span class="kw">var</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Dummy variables typically don’t need to be scaled, but can be. If scaling all your variables allows convergence, try different combinations of scaled and unscaled to figure out what variables are causing the problem. It’s typically (but not always) the variables which have the largest scale to begin with.</p>
+<p>Another potential convergence issue is extremely high correlation between predictors (including dummy variables). You should have already addressed this when considering multicollinearity, but if not, it can make convergence challenging.</p>
+<p>If the iteration keeps running (as opposed to ending and complaining about lack of convergence), try passing the option <code>iterate(#)</code> with a few “large” (“large” is relative to running time) numbers to tell the algorithm to stop after <code>#</code> iterations, regardless of convergence. (Recall that an iterative solution produces an answer at each iteration, it’s just not a consistent answer until you reach convergence.) You’re looking for two things:</p>
+<ul>
+<li>First, if there are any estimated standard errors that are extremely close to zero or exploding towards infinity, that predictor may be causing the issue. Try removing it.</li>
+<li>Second, if you try a few different max iterations (say 50, 100 and 200), and the estimated coefficients and standard errors are relatively constant, you may be running into a case where the model is converging to just beyond the tolerance which Stata uses, but for all intents and purposes is converged. Set <code>iterate(#)</code> to a high number and use that result.</li>
+</ul>
+<p>You can try use the “reml” optimizer, by passing the <code>reml</code> option. This optimizer can be a bit easier to converge, though may be slower.</p>
+<p>Finally, although it pains me to admit it, you should try running the model in different software such as R or SAS. Each software has slightly different algorithms it uses, and there are situations where one software will converge and another won’t</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const disableStylesheet = (stylesheets) => {
+    for (let i=0; i < stylesheets.length; i++) {
+      const stylesheet = stylesheets[i];
+      stylesheet.rel = 'prefetch';
+    }
+  }
+  const enableStylesheet = (stylesheets) => {
+    for (let i=0; i < stylesheets.length; i++) {
+      const stylesheet = stylesheets[i];
+      stylesheet.rel = 'stylesheet';
+    }
+  }
+  const manageTransitions = (selector, allowTransitions) => {
+    const els = window.document.querySelectorAll(selector);
+    for (let i=0; i < els.length; i++) {
+      const el = els[i];
+      if (allowTransitions) {
+        el.classList.remove('notransition');
+      } else {
+        el.classList.add('notransition');
+      }
+    }
+  }
+  const toggleColorMode = (alternate) => {
+    // Switch the stylesheets
+    const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+    manageTransitions('#quarto-margin-sidebar .nav-link', false);
+    if (alternate) {
+      enableStylesheet(alternateStylesheets);
+      for (const sheetNode of alternateStylesheets) {
+        if (sheetNode.id === "quarto-bootstrap") {
+          toggleBodyColorMode(sheetNode);
+        }
+      }
+    } else {
+      disableStylesheet(alternateStylesheets);
+      toggleBodyColorPrimary();
+    }
+    manageTransitions('#quarto-margin-sidebar .nav-link', true);
+    // Switch the toggles
+    const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+    for (let i=0; i < toggles.length; i++) {
+      const toggle = toggles[i];
+      if (toggle) {
+        if (alternate) {
+          toggle.classList.add("alternate");     
+        } else {
+          toggle.classList.remove("alternate");
+        }
+      }
+    }
+    // Hack to workaround the fact that safari doesn't
+    // properly recolor the scrollbar when toggling (#1455)
+    if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+      manageTransitions("body", false);
+      window.scrollTo(0, 1);
+      setTimeout(() => {
+        window.scrollTo(0, 0);
+        manageTransitions("body", true);
+      }, 40);  
+    }
+  }
+  const isFileUrl = () => { 
+    return window.location.protocol === 'file:';
+  }
+  const hasAlternateSentinel = () => {  
+    let styleSentinel = getColorSchemeSentinel();
+    if (styleSentinel !== null) {
+      return styleSentinel === "alternate";
+    } else {
+      return false;
+    }
+  }
+  const setStyleSentinel = (alternate) => {
+    const value = alternate ? "alternate" : "default";
+    if (!isFileUrl()) {
+      window.localStorage.setItem("quarto-color-scheme", value);
+    } else {
+      localAlternateSentinel = value;
+    }
+  }
+  const getColorSchemeSentinel = () => {
+    if (!isFileUrl()) {
+      const storageValue = window.localStorage.getItem("quarto-color-scheme");
+      return storageValue != null ? storageValue : localAlternateSentinel;
+    } else {
+      return localAlternateSentinel;
+    }
+  }
+  let localAlternateSentinel = 'default';
+  // Dark / light mode switch
+  window.quartoToggleColorScheme = () => {
+    // Read the current dark / light value 
+    let toAlternate = !hasAlternateSentinel();
+    toggleColorMode(toAlternate);
+    setStyleSentinel(toAlternate);
+  };
+  // Ensure there is a toggle, if there isn't float one in the top right
+  if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+    const a = window.document.createElement('a');
+    a.classList.add('top-right');
+    a.classList.add('quarto-color-scheme-toggle');
+    a.href = "";
+    a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+    const i = window.document.createElement("i");
+    i.classList.add('bi');
+    a.appendChild(i);
+    window.document.body.appendChild(a);
+  }
+  // Switch to dark mode if need be
+  if (hasAlternateSentinel()) {
+    toggleColorMode(true);
+  } else {
+    toggleColorMode(false);
+  }
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./01-mixed-model-theory.html" class="pagination-link">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Mixed Model Theory</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./03-random-slopes.html" class="pagination-link">
+        <span class="nav-page-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Random slopes</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+</body></html>

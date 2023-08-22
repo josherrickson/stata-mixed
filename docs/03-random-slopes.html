@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Regression Modeling in Stata</title>
+<title>Regression Modeling in Stata - 3&nbsp; Random slopes</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -20,6 +20,40 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
 </style>
 
 
@@ -30,7 +64,8 @@ ul.task-list li input[type="checkbox"] {
 <script src="site_libs/quarto-search/fuse.min.js"></script>
 <script src="site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="./">
-<link href="./01-mixed-model-theory.html" rel="next">
+<link href="./04-generalized-linear-mixed-models.html" rel="next">
+<link href="./02-fitting-mixed-models.html" rel="prev">
 <script src="site_libs/quarto-html/quarto.js"></script>
 <script src="site_libs/quarto-html/popper.min.js"></script>
 <script src="site_libs/quarto-html/tippy.umd.min.js"></script>
@@ -63,6 +98,8 @@ ul.task-list li input[type="checkbox"] {
   }
 }</script>
 
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
 
 </head>
 
@@ -75,7 +112,7 @@ ul.task-list li input[type="checkbox"] {
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-      <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./index.html">Preface</a></li></ol></nav>
+      <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./03-random-slopes.html"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Random slopes</span></a></li></ol></nav>
       <a class="flex-grow-1" role="button" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
       </a>
       <button type="button" class="btn quarto-search-button" aria-label="" onclick="window.quartoOpenSearch();">
@@ -105,7 +142,7 @@ ul.task-list li input[type="checkbox"] {
     <ul class="list-unstyled mt-1">
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./index.html" class="sidebar-item-text sidebar-link active">
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Preface</span></a>
   </div>
 </li>
@@ -123,7 +160,7 @@ ul.task-list li input[type="checkbox"] {
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./03-random-slopes.html" class="sidebar-item-text sidebar-link">
+  <a href="./03-random-slopes.html" class="sidebar-item-text sidebar-link active">
  <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Random slopes</span></span></a>
   </div>
 </li>
@@ -143,11 +180,8 @@ ul.task-list li input[type="checkbox"] {
     <h2 id="toc-title">Table of contents</h2>
    
   <ul>
-  <li><a href="#preface" id="toc-preface" class="nav-link active" data-scroll-target="#preface">Preface</a>
-  <ul class="collapse">
-  <li><a href="#how-to-use-this-document" id="toc-how-to-use-this-document" class="nav-link" data-scroll-target="#how-to-use-this-document">How to use this document</a></li>
-  <li><a href="#cscar" id="toc-cscar" class="nav-link" data-scroll-target="#cscar">CSCAR</a></li>
-  </ul></li>
+  <li><a href="#fitting-a-random-slope" id="toc-fitting-a-random-slope" class="nav-link active" data-scroll-target="#fitting-a-random-slope"><span class="header-section-number">3.1</span> Fitting a random slope</a></li>
+  <li><a href="#do-you-need-to-include-the-fixed-slope-if-you-have-the-random-slopes" id="toc-do-you-need-to-include-the-fixed-slope-if-you-have-the-random-slopes" class="nav-link" data-scroll-target="#do-you-need-to-include-the-fixed-slope-if-you-have-the-random-slopes"><span class="header-section-number">3.2</span> Do you need to include the fixed slope if you have the random slopes</a></li>
   </ul>
 </nav>
     </div>
@@ -156,7 +190,7 @@ ul.task-list li input[type="checkbox"] {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Regression Modeling in Stata</h1>
+<h1 class="title"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Random slopes</span></h1>
 </div>
 
 
@@ -171,23 +205,88 @@ ul.task-list li input[type="checkbox"] {
 
 </header>
 
-<section id="preface" class="level1 unnumbered">
-<h1 class="unnumbered">Preface</h1>
-<section id="how-to-use-this-document" class="level2 unnumbered">
-<h2 class="unnumbered anchored" data-anchor-id="how-to-use-this-document">How to use this document</h2>
-<p>These notes are published using <a href="https://quarto.org">Quarto</a>. The Stata code is first rendered using a Stata <a href="https://www.stata.com/manuals/rptdynamicdocumentsintro.pdf">dynamic document</a>. The source code for these notes can be found at <a href="https://github.com/josherrickson/stata-regression" class="uri">https://github.com/josherrickson/stata-regression</a> for the curious.</p>
-<p>All images should link to full-size versions to see detail if needed.</p>
+<p>So far all we’ve talked about are random intercepts. This is by far the most common form of mixed effects regression models. Recall that we set up the <a href="./01-mixed-model-theory.html">theory</a> by allowing each group to have its own intercept which we don’t estimate. We can also allow each group to have it’s own slope which we don’t estimate. Just as random intercepts are akin to including a fixed effect allowing each group to have it’s own fixed effect, random slopes are akin to interacting a variable with the grouping variable, allowing each group to have it’s own relationship.</p>
+<p>We would include a random slope in the model if, instead of the relationship between a predictor and the outcome when controlling for group membership, we were interested in the average relationship between the predictor and the outcome across groups. For example, if we had our basic class example,</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>mixed gpa familyincome || <span class="kw">class</span>:</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>In this model, the coefficient on <code>familyincome</code> would estimate the relationship between family income and GPA, removing any additional class-level differences. (Class-level differences here might be that a class that randomly has lower average income has a better teacher.)</p>
+<p>If we include a random slope, we add the variable after the <code>:</code> in the second equation.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>mixed gpa familyincome || <span class="kw">class</span>: familyincome</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Now the model would allow each classroom to have it’s own relationship between family income and GPA (which, just like random intercepts, is not actually estimated) and the coefficient on <code>familyincome</code> would represent the average of those relationships.</p>
+<p>Do you need a random slope? It depends on your theory. If your grouping variable is a nuisance and you’re simply controlling for it (as it is in most cases), you probably don’t need a random slope. If, on the other hand, you suspect there are substantial differences between groups and you’re really interested in the average of those differences, then you should.</p>
+<p>For reference, I’d say conservatively 95% of the mixed models I fit are in situations where a random slope is not needed, and 75% of the time when people ask me if they need a random slope, the answer is no. However, my general bias is towards simpler models.<a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></p>
+<section id="fitting-a-random-slope" class="level2" data-number="3.1">
+<h2 data-number="3.1" class="anchored" data-anchor-id="fitting-a-random-slope"><span class="header-section-number">3.1</span> Fitting a random slope</h2>
+<p>Let’s add a random slope for gender.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>. mixed qol age agebelow52 ageabove82 i.socialclass female || household: female</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>Performing EM optimization ...</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>Performing <span class="kw">gradient</span>-based optimization: </span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>Iteration 0:  Log likelihood = -18119.073  (<span class="kw">not</span> concave)</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>Iteration 1:  Log likelihood = -17948.342  </span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>Iteration 2:  Log likelihood =  -17943.72  </span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>Iteration 3:  Log likelihood = -17943.715  </span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>Iteration 4:  Log likelihood = -17943.715  </span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>Computing standard errors ...</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>Mixed-<span class="kw">effects</span> ML regression                          Number <span class="kw">of</span> <span class="kw">obs</span>    =  5,179</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>Group <span class="kw">variable</span>: household                            Number <span class="kw">of</span> groups =  3,995</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>                                                     Obs per <span class="fu">group</span>:</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>                                                                  <span class="fu">min</span> =      1</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>                                                                  avg =    1.3</span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>                                                                  <span class="fu">max</span> =      3</span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>                                                     Wald <span class="fu">chi2</span>(9)     = 129.85</span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>Log likelihood = -17943.715                          Prob &gt; <span class="fu">chi2</span>      = 0.0000</span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>------------------------------------------------------------------------------</span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>         qol | Coefficient  Std. err.      z    P&gt;|z|     [95% conf. interval]</span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>-------------+----------------------------------------------------------------</span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>         age |  -.0091432   .0139003    -0.66   0.511    -.0363872    .0181008</span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>  agebelow52 |  -.3693919   .5323218    -0.69   0.488    -1.412723    .6739396</span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>  ageabove82 |  -1.205023   .9809622    -1.23   0.219    -3.127673    .7176278</span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>             |</span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a> socialclass |</span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a>Manageria..  |   .2311012   .5075454     0.46   0.649    -.7636694    1.225872</span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a> Non-Manual  |  -1.107475   .5090861    -2.18   0.030    -2.105265   -.1096846</span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a>    Skilled  |  -1.807631   .5325279    -3.39   0.001    -2.851366    -.763895</span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a>Semi-skil~<span class="kw">d</span>  |  -2.980058   .5455297    -5.46   0.000    -4.049276   -1.910839</span>
+<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a>  Unskilled  |  -3.576474   .7302271    -4.90   0.000    -5.007693   -2.145255</span>
+<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a>             |</span>
+<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a>      female |   .5655497   .2081084     2.72   0.007     .1576647    .9734348</span>
+<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a>       <span class="dt">_cons</span> |   44.72468   1.018609    43.91   0.000     42.72825    46.72112</span>
+<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a>------------------------------------------------------------------------------</span>
+<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a>------------------------------------------------------------------------------</span>
+<span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a>  Random-<span class="kw">effects</span> parameters  |   Estimate   Std. err.     [95% conf. interval]</span>
+<span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a>-----------------------------+------------------------------------------------</span>
+<span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a>household: Independent       |</span>
+<span id="cb3-45"><a href="#cb3-45" aria-hidden="true" tabindex="-1"></a>                 <span class="kw">var</span>(female) |   4.050416   2.356897      1.294774    12.67084</span>
+<span id="cb3-46"><a href="#cb3-46" aria-hidden="true" tabindex="-1"></a>                  <span class="kw">var</span>(<span class="dt">_cons</span>) |    22.7137   1.789205      19.46421    26.50567</span>
+<span id="cb3-47"><a href="#cb3-47" aria-hidden="true" tabindex="-1"></a>-----------------------------+------------------------------------------------</span>
+<span id="cb3-48"><a href="#cb3-48" aria-hidden="true" tabindex="-1"></a>               <span class="kw">var</span>(Residual) |   36.96956   1.960264      33.32041    41.01835</span>
+<span id="cb3-49"><a href="#cb3-49" aria-hidden="true" tabindex="-1"></a>------------------------------------------------------------------------------</span>
+<span id="cb3-50"><a href="#cb3-50" aria-hidden="true" tabindex="-1"></a>LR <span class="kw">test</span> vs. linear <span class="kw">model</span>: <span class="fu">chi2</span>(2) = 149.11                Prob &gt; <span class="fu">chi2</span> = 0.0000</span>
+<span id="cb3-51"><a href="#cb3-51" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-52"><a href="#cb3-52" aria-hidden="true" tabindex="-1"></a>Note: LR <span class="kw">test</span> is conservative and provided only <span class="kw">for</span> reference.</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Most of the output seems very familiar. The only addition is the “var(female)” in the Random-effects Parameters table which, just like in random intercepts, estimates the variance across all the random slopes. Here it is very non-zero, so improves model fit. However, none of the fixed effects really change. The only difference is in the interpretation of the coefficient on female:</p>
+<p>In the random intercepts model, the coefficient on female represented that females were on average that much higher than males, regardless of age, social class, or inter-household variance.</p>
+<p>In this model with the random slope as well, the coefficient on female represents the average across all households of the amount that females are above males, regardless of age or social class.</p>
 </section>
-<section id="cscar" class="level2 unnumbered">
-<h2 class="unnumbered anchored" data-anchor-id="cscar">CSCAR</h2>
-<p><a href="http://cscar.research.umich.edu/" class="uri">http://cscar.research.umich.edu/</a></p>
-<p>CSCAR is available for free consultations with PhD statisticians (email deskpeople@umich.edu to request a consultation).</p>
-<p>CSCAR also has GSRAs available for more immediate help. Walk-ins to our office in Rackham are welcomed Monday-Friday 9am to 5pm (Closed Tuesdays 12-1pm). Alternatively, on our website, you can self-schedule into an hour consultation with the graduate students, which can be either remote or in-person (these are usually available same-day or next-day).</p>
-<p>CSCAR operates a email for help with statistical questions, feel free to send concise questions to stats-consulting@umich.edu.</p>
-<p>The current contact for questions about the notes: Josh Errickson (jerrick@umich.edu).</p>
+<section id="do-you-need-to-include-the-fixed-slope-if-you-have-the-random-slopes" class="level2" data-number="3.2">
+<h2 data-number="3.2" class="anchored" data-anchor-id="do-you-need-to-include-the-fixed-slope-if-you-have-the-random-slopes"><span class="header-section-number">3.2</span> Do you need to include the fixed slope if you have the random slopes</h2>
+<p>Yes.</p>
+<p>In almost every model.</p>
+<p>This is very similar to excluding the intercept (<span class="math inline">\(\beta_0\)</span>) in a model - this forces the slope to pass through (0,0). In some very rare situations that might be appropriate, but extremely rarely.</p>
+<p>Excluding the fixed slope when including random slopes forces the average of all random slopes to be 0. If the true random slope is far from zero, this will have catastrophic effects, including reversing the signs on a good number of the random slopes.</p>
 
 
 </section>
+<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
+<hr>
+<ol>
+<li id="fn1"><p>If you’re curious, my rational is I’d rather fit a simpler model that misses a nuanced complexity, then fit a more complicated model that has takes a substantial power hit and potentially is drastically further from the “truth”.<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
 </section>
 
 </main> <!-- /main -->
@@ -541,10 +640,13 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 </script>
 <nav class="page-navigation">
   <div class="nav-page nav-page-previous">
+      <a href="./02-fitting-mixed-models.html" class="pagination-link">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Fitting Linear Mixed Models</span></span>
+      </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="./01-mixed-model-theory.html" class="pagination-link">
-        <span class="nav-page-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Mixed Model Theory</span></span> <i class="bi bi-arrow-right-short"></i>
+      <a href="./04-generalized-linear-mixed-models.html" class="pagination-link">
+        <span class="nav-page-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Generalized Linear Mixed Models</span></span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
 </nav>
